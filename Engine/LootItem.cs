@@ -28,7 +28,9 @@ namespace Engine
 		/// <param name="isDefaultItem">是否保底掉落</param>
 		public LootItem(Item details, int dropPercentage, bool isDefaultItem)
 		{
-
+			Details = details;
+			DropPercentage = dropPercentage;
+			IsDefaultItem = isDefaultItem;
 		}
 	}
 }
