@@ -90,7 +90,8 @@ namespace BugVenture
 				// 添加道具到lootedItems列表里，根据掉落率比较一个随机值
 				foreach (LootItem lootItem in _currentMonster.LootTable)
 				{
-					if (RandomNumberGenerator.NumberBetween(1, 100) <= lootItem.DropPercentage)
+					int rndNum = RandomNumberGenerator.NumberBetween(1, 100);
+					if (rndNum <= lootItem.DropPercentage)
 					{
 						lootedItems.Add(new InventoryItem(lootItem.Details, 1));
 					}
@@ -106,7 +107,6 @@ namespace BugVenture
 						}
 					}
 				}
-
 				// 将掉落物添加到玩家道具栏里。
 				foreach (InventoryItem inventoryItem in lootedItems)
 				{

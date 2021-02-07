@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,9 +57,17 @@ namespace Engine
 				// 如果不需要关键道具进入这个场景，则直接返回true
 				return true;
 			}
-			// 检查玩家物品栏里是否有所需要的关键道具，使用LINQ写法遍历玩家物品栏
-			// Exists方法用于检查Inventory列表里有没有该道具，则返回true，否则返回false
-			return Inventory.Exists(inventoryItem => inventoryItem.Details.ID == location.ItemRequiredToEnter.ID);
+			// 检查玩家物品栏里是否有所需要的关键道具
+			foreach (InventoryItem inventoryItem in Inventory)
+			{
+				if (inventoryItem.Details.ID == location.ItemRequiredToEnter.ID)
+				{
+					// 找到该关键道具（玩家拥有该道具）
+					return true;
+				}
+			}
+			// 在任务栏里没有找到该关键道具
+			return false;
 		}
 
 		/// <summary>
@@ -69,7 +77,14 @@ namespace Engine
 		/// <returns>如果有任务则返回true</returns>
 		public bool HasThisQuest(Quest quest)
 		{
-			return Quests.Exists(playerQuest => playerQuest.Details.ID == quest.ID);
+			foreach (PlayerQuest playerQuest in Quests)
+			{
+				if (playerQuest.Details.ID == quest.ID)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -96,12 +111,26 @@ namespace Engine
 		/// <returns>玩家拥有所有条件道具，并且所有道具数量足够则返回true</returns>
 		public bool HasAllQuestCompletionItems(Quest quest)
 		{
-			foreach (QuestCompletionItem qci in quest.QuestCompletionItems)
+			foreach (QuestCompletionItem questCompletionItem in quest.QuestCompletionItems)
 			{
+				bool foundItemInPlayersInventory = false;
 				// 检查玩家物品栏里是否有对应的道具，如果有，检查他们的数量是否达到要求
-				if (!Inventory.Exists(ii => ii.Details.ID == qci.Details.ID && ii.Quantity >= qci.Quantity))
+				foreach (InventoryItem inventoryItem in Inventory)
 				{
-					// 如果没有达到其中一项要求，则直接返回false，不用继续检查后面的条件。
+					if (inventoryItem.Details.ID == questCompletionItem.Details.ID)
+					{
+						// 玩家拥有该道具
+						foundItemInPlayersInventory = true;
+						if (inventoryItem.Quantity < questCompletionItem.Quantity)
+						{
+							// 如果玩家所拥有的道具数量不足
+							return false;
+						}
+					}
+				}
+				if (!foundItemInPlayersInventory)
+				{
+					// 如果玩家没有任何条件道具
 					return false;
 				}
 			}
@@ -115,14 +144,16 @@ namespace Engine
 		/// <param name="quest">执行的任务</param>
 		public void RemoveQuestCompletetionItems(Quest quest)
 		{
-			foreach (QuestCompletionItem qci in quest.QuestCompletionItems)
+			foreach (QuestCompletionItem questCompletionItem in quest.QuestCompletionItems)
 			{
-				// SingleOrDefault 函数用来检查列表里唯一一个匹配的物品
-				InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == qci.Details.ID);
-				if (item != null)
+				foreach (InventoryItem inventoryItem in Inventory)
 				{
-					// 减去任务道具
-					item.Quantity -= qci.Quantity;
+					if (inventoryItem.Details.ID == questCompletionItem.Details.ID)
+					{
+						// 减掉该物品的数量（消耗）
+						inventoryItem.Quantity -= questCompletionItem.Quantity;
+						break;
+					}
 				}
 			}
 		}
@@ -133,32 +164,31 @@ namespace Engine
 		/// <param name="itemToAdd">需要添加的物品</param>
 		public void AddItemToInventory(Item itemToAdd)
 		{
-			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToAdd.ID);
-			if (item == null)
+			foreach (InventoryItem inventoryItem in Inventory)
 			{
-				// 如果物品栏里没有这个道具，则添加新的道具，数量为1
-				Inventory.Add(new InventoryItem(itemToAdd, 1));
+				if (inventoryItem.Details.ID == itemToAdd.ID)
+				{
+					// 这个物品已在物品栏，所以直接增加物品数量就行
+					inventoryItem.Quantity++;
+					return; // 添加完了之后，结束函数
+				}
 			}
-			else
-			{
-				// 这个物品已在物品栏，所以直接增加物品数量就行
-				item.Quantity++;
-				return; // 添加完了之后，结束函数
-			}
+			// 如果物品栏里没有这个道具，则添加新的道具，数量为1
+			Inventory.Add(new InventoryItem(itemToAdd, 1));
 		}
 
-		/// <summary>
-		/// 将任务标记完成
-		/// </summary>
-		/// <param name="quest"></param>
 		public void MarkQuestCompleted(Quest quest)
 		{
 			// 在玩家任务列表里找到该任务
-			PlayerQuest playerQuest = Quests.SingleOrDefault(pq => pq.Details.ID == quest.ID);
-			if (playerQuest != null)
+			foreach (PlayerQuest playerQuest in Quests)
 			{
-				// 把它标记任务完成
-				playerQuest.IsCompleted = true;
+				if (playerQuest.Details.ID == quest.ID)
+				{
+					// 把它标记任务完成
+					playerQuest.IsCompleted = true;
+					// 已经找到该任务，并标记完成，所以结束函数
+					return;
+				}
 			}
 		}
 	}
