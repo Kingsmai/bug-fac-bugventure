@@ -28,10 +28,7 @@ namespace BugVenture
 			_player.Inventory.Add(new InventoryItem(World.ItemByID(World.ITEM_ID_RUSTY_SWORD), 1));
 
 			// UI显示玩家信息
-			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
-			lblGold.Text = _player.Gold.ToString();
-			lblExperience.Text = _player.ExperiencePoints.ToString();
-			lblLevel.Text = _player.Level.ToString();
+			UpdatePlayerStatsInUI();
 		}
 
 		private void btnNorth_Click(object sender, EventArgs e)
@@ -123,10 +120,7 @@ namespace BugVenture
 				}
 
 				// 刷新角色信息和物品栏控制
-				lblHitPoints.Text = _player.CurrentHitPoints.ToString();
-				lblGold.Text = _player.Gold.ToString();
-				lblExperience.Text = _player.ExperiencePoints.ToString();
-				lblLevel.Text = _player.Level.ToString();
+				UpdatePlayerStatsInUI();
 
 				UpdateInventoryListInUI();
 				UpdateWeaponListInUI();
@@ -141,27 +135,8 @@ namespace BugVenture
 			else
 			{
 				// 怪物仍然活着
-				// 计算怪物对玩家造成的伤害
-				int damageToPlayer = RandomNumberGenerator.NumberBetween(0, _currentMonster.MaximumDamage);
-
-				// 显示信息
-				rtbMessages.Text += "The " + _currentMonster.Name + " did " + damageToPlayer.ToString() + " points of damage." + Environment.NewLine;
-
-				// 扣去玩家生命值
-				_player.CurrentHitPoints -= damageToPlayer;
-
-				// 刷新玩家生命值
-				lblHitPoints.Text = _player.CurrentHitPoints.ToString();
-
-				// 检查玩家是否死亡
-				if (_player.CurrentHitPoints <= 0)
-				{
-					// 显示信息
-					rtbMessages.Text += "The " + _currentMonster.Name + " killed you." + Environment.NewLine;
-
-					// 回到出生点
-					MoveTo(World.LocationByID(World.LOCATION_ID_HOME));
-				}
+				// 轮到怪物回合
+				MonsterAttack();
 			}
 		}
 
@@ -193,34 +168,15 @@ namespace BugVenture
 			rtbMessages.Text += "You drink a " + potion.Name + Environment.NewLine;
 
 			// 轮到怪物展开攻击
-			// 计算怪物对玩家造成的伤害
-			int damageToPlayer = RandomNumberGenerator.NumberBetween(0, _currentMonster.MaximumDamage);
-
-			// 显示信息
-			rtbMessages.Text += "The " + _currentMonster.Name + " did " + damageToPlayer.ToString() + " points of damage." + Environment.NewLine;
-
-			// 扣去玩家生命值
-			_player.CurrentHitPoints -= damageToPlayer;
-
-			// 刷新玩家生命值
-			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
-
-			// 检查玩家是否死亡
-			if (_player.CurrentHitPoints <= 0)
-			{
-				// 显示信息
-				rtbMessages.Text += "The " + _currentMonster.Name + " killed you." + Environment.NewLine;
-
-				// 回到出生点
-				MoveTo(World.LocationByID(World.LOCATION_ID_HOME));
-			}
+			MonsterAttack();
 
 			// 刷新玩家UI
-			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
+			UpdatePlayerStatsInUI();
 			UpdateInventoryListInUI();
 			UpdatePotionListInUI();
 		}
 
+		// 移动到新的地图
 		private void MoveTo(Location newLocation)
 		{
 			// 如果玩家没有进入该场景的道具
@@ -249,7 +205,7 @@ namespace BugVenture
 			_player.CurrentHitPoints = _player.MaximumHitPoints;
 
 			// UI更新HP值
-			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
+			UpdatePlayerStatsInUI();
 
 			// 当前地点是否有任务
 			if (newLocation.QuestAvailableHere != null)
@@ -366,6 +322,32 @@ namespace BugVenture
 			UpdatePotionListInUI();
 		}
 
+		// 怪物回合（攻击）
+		private void MonsterAttack()
+		{
+			// 计算怪物对玩家造成的伤害
+			int damageToPlayer = RandomNumberGenerator.NumberBetween(0, _currentMonster.MaximumDamage);
+
+			// 显示信息
+			rtbMessages.Text += "The " + _currentMonster.Name + " did " + damageToPlayer.ToString() + " points of damage." + Environment.NewLine;
+
+			// 扣去玩家生命值
+			_player.CurrentHitPoints -= damageToPlayer;
+
+			// 刷新玩家生命值
+			UpdatePlayerStatsInUI();
+
+			// 检查玩家是否死亡
+			if (_player.CurrentHitPoints <= 0)
+			{
+				// 显示信息
+				rtbMessages.Text += "The " + _currentMonster.Name + " killed you." + Environment.NewLine;
+
+				// 回到出生点
+				MoveTo(World.LocationByID(World.LOCATION_ID_HOME));
+			}
+		}
+
 		// 更新玩家物品栏
 		private void UpdateInventoryListInUI()
 		{
@@ -475,7 +457,7 @@ namespace BugVenture
 		}
 
 		// 滚动到最下方
-		private void ScrollToBottomOfMessages()
+		private void ScrollToBottomOfMessages(object sender, EventArgs e)
 		{
 			rtbMessages.SelectionStart = rtbMessages.Text.Length;
 			rtbMessages.ScrollToCaret();

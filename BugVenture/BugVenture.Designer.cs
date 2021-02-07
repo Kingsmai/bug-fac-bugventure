@@ -226,6 +226,7 @@ namespace BugVenture
 			this.rtbMessages.Size = new System.Drawing.Size(360, 286);
 			this.rtbMessages.TabIndex = 10;
 			this.rtbMessages.Text = "";
+			this.rtbMessages.TextChanged += new System.EventHandler(this.ScrollToBottomOfMessages);
 			// 
 			// dgvInventory
 			// 
@@ -243,7 +244,7 @@ namespace BugVenture
 			this.dgvInventory.Size = new System.Drawing.Size(321, 309);
 			this.dgvInventory.TabIndex = 11;
 			// 
-			// dataGridView1
+			// dgvQuest
 			// 
 			this.dgvQuest.AllowUserToAddRows = false;
 			this.dgvQuest.AllowUserToDeleteRows = false;
@@ -253,7 +254,7 @@ namespace BugVenture
 			this.dgvQuest.Enabled = false;
 			this.dgvQuest.Location = new System.Drawing.Point(16, 446);
 			this.dgvQuest.MultiSelect = false;
-			this.dgvQuest.Name = "dataGridView1";
+			this.dgvQuest.Name = "dgvQuest";
 			this.dgvQuest.ReadOnly = true;
 			this.dgvQuest.RowHeadersVisible = false;
 			this.dgvQuest.Size = new System.Drawing.Size(321, 189);
