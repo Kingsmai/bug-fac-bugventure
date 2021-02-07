@@ -1,0 +1,331 @@
+		private void MoveTo(Location newLocation)
+		{
+			// 检查该位置有没有需要的入场道具（钥匙）
+			if (newLocation.ItemRequiredToEnter != null)
+			{
+				// 检查玩家是否拥有这件物品
+				bool playerHasRequiredItem = false;
+
+				// 遍历角色物品栏中的物品
+				foreach (InventoryItem inventoryItem in _player.Inventory)
+				{
+					if (inventoryItem.Details.ID == newLocation.ItemRequiredToEnter.ID)
+					{
+						// 找到钥匙道具
+						playerHasRequiredItem = true;
+						break; // 结束循环
+					}
+				}
+
+				// 循环结束之后，如果玩家没有这个关键道具
+				if (!playerHasRequiredItem)
+				{
+					// 显示信息
+					rtbMessages.Text += "You must have a " +
+						newLocation.ItemRequiredToEnter.Name +
+						" to enter this location." +
+						Environment.NewLine;
+					return; // 结束事件操作（不让玩家进入）
+				}
+			}
+
+			// 更新玩家当前位置
+			_player.CurrentLocation = newLocation;
+
+			// 显示/隐藏上下左右的按钮
+			btnNorth.Visible = (newLocation.LocationToNorth != null); // 当位置存在，则显示按钮
+			btnEast.Visible = (newLocation.LocationToEast != null);
+			btnSouth.Visible = (newLocation.LocationToSouth != null);
+			btnWest.Visible = (newLocation.LocationToWest != null);
+
+			// 显示当前位置名字和描述
+			rtbLocation.Text = newLocation.Name + Environment.NewLine;
+			rtbLocation.Text += newLocation.Description + Environment.NewLine;
+
+			// 完全恢复角色
+			_player.CurrentHitPoints = _player.MaximumHitPoints;
+
+			// UI更新HP值
+			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
+
+			// 当前地点是否有任务
+			if (newLocation.QuestAvailableHere != null)
+			{
+				// 检查玩家是否拥有任务
+				bool playerAlreadyHasQuest = false;
+				// 检查玩家是否已经完成任务
+				bool playerAlreadyCompletedQuest = false;
+
+				// 遍历角色任务栏中的任务
+				foreach (PlayerQuest playerQuest in _player.Quests)
+				{
+					// 当任务栏里的任务ID和当前地点任务相吻合
+					if (playerQuest.Details.ID == newLocation.QuestAvailableHere.ID)
+					{
+						// 玩家已经拥有任务
+						playerAlreadyHasQuest = true;
+
+						// 当任务被玩家完成
+						if (playerQuest.IsCompleted)
+						{
+							playerAlreadyCompletedQuest = true;
+						}
+					}
+				}
+
+				// 遍历结束后，如果玩家已经拥有这个任务
+				if (playerAlreadyHasQuest)
+				{
+					// 如果玩家还没完成这项任务
+					if (!playerAlreadyCompletedQuest)
+					{
+						// 如果玩家拥有所有的任务道具
+						bool playerHasAllItemsToCompleteQuest = true;
+
+						// 遍历当前任务所需要的通关道具
+						foreach (QuestCompletionItem questCompletionItem in newLocation.QuestAvailableHere.QuestCompletionItems)
+						{
+							// 在物品栏里找到该道具
+							bool foundItemInPlayerInventory = false;
+
+							// 检查玩家的道具栏，并检查是否拥有该关键道具，且检查其数量是否足够完成任务
+							foreach (InventoryItem inventoryItem in _player.Inventory)
+							{
+								// 当玩家拥有该物品
+								if (inventoryItem.Details.ID == questCompletionItem.Details.ID)
+								{
+									foundItemInPlayerInventory = true;
+									// 当玩家所持有该道具数量不足以完成任务
+									if (inventoryItem.Quantity < questCompletionItem.Quantity)
+									{
+										playerHasAllItemsToCompleteQuest = false;
+										// 结束遍历，不用继续检查其他的道具了。
+										break;
+									}
+									// 我们在物品栏里找到该道具了，所以不用继续遍历其他物品栏道具
+									break;
+								}
+							}
+							// 如果没有找到所需物品，修改变量，然后结束遍历
+							if (!foundItemInPlayerInventory)
+							{
+								// 玩家没有完成任务所需的道具
+								playerHasAllItemsToCompleteQuest = false;
+								// 不用去查找其他的完成任务了
+								break;
+							}
+						}
+						// 当玩家拥有通关任务所需要的道具
+						if (playerHasAllItemsToCompleteQuest)
+						{
+							// 显示信息
+							rtbMessages.Text += Environment.NewLine;
+							rtbMessages.Text += "You complete the " +
+								newLocation.QuestAvailableHere.Name +
+								" quest." + Environment.NewLine;
+
+							// 删除玩家任务栏里的任务道具
+							foreach (QuestCompletionItem questCompletionItem in newLocation.QuestAvailableHere.QuestCompletionItems)
+							{
+								foreach (InventoryItem inventoryItem in _player.Inventory)
+								{
+									// 找到该物品，则删除
+									if (inventoryItem.Details.ID == questCompletionItem.Details.ID)
+									{
+										// 扣去该物品的数量（完成任务的那一部分）
+										inventoryItem.Quantity -= questCompletionItem.Quantity;
+										break;
+									}
+								}
+							}
+
+							// 给予任务奖励道具，并显示信息
+							rtbMessages.Text += "You receive: " + Environment.NewLine;
+							rtbMessages.Text += newLocation.QuestAvailableHere.RewardExperiencePoints.ToString() + " experience points" + Environment.NewLine;
+							rtbMessages.Text += newLocation.QuestAvailableHere.RewardGold.ToString() + " gold" + Environment.NewLine;
+							rtbMessages.Text += newLocation.QuestAvailableHere.RewardItem.Name + Environment.NewLine;
+							rtbMessages.Text += Environment.NewLine;
+
+							_player.ExperiencePoints += newLocation.QuestAvailableHere.RewardExperiencePoints;
+							_player.Gold += newLocation.QuestAvailableHere.RewardGold;
+
+							// 添加奖励道具到玩家任务栏
+							bool addedItemToPlayerInventory = false;
+
+							foreach (InventoryItem inventoryItem in _player.Inventory)
+							{
+								if (inventoryItem.Details.ID == newLocation.QuestAvailableHere.RewardItem.ID)
+								{
+									// 如果他的道具栏已经有这个物品
+									inventoryItem.Quantity++;
+									addedItemToPlayerInventory = true;
+									break;
+								}
+							}
+							// 如果他们的物品栏里没有这个物品，则添加该道具，并且数量为1
+							if (!addedItemToPlayerInventory)
+							{
+								_player.Inventory.Add(new InventoryItem(newLocation.QuestAvailableHere.RewardItem, 1));
+							}
+							// 标记该任务已经被完成
+							// 在玩家人物列表里找到该任务
+							foreach (PlayerQuest playerQuest in _player.Quests)
+							{
+								if (playerQuest.Details.ID == newLocation.QuestAvailableHere.ID)
+								{
+									// 标记完成
+									playerQuest.IsCompleted = true;
+									break;
+								}
+							}
+						}
+					}
+				}
+				else // 如果玩家没有这个任务
+				{
+					// 显示信息
+					rtbMessages.Text += "You received the " + newLocation.QuestAvailableHere.Name + " quest." + Environment.NewLine;
+					rtbMessages.Text += newLocation.QuestAvailableHere.Description + Environment.NewLine;
+					rtbMessages.Text += "To complete it, return with: " + Environment.NewLine;
+					foreach (QuestCompletionItem questCompletionItem in newLocation.QuestAvailableHere.QuestCompletionItems)
+					{
+						if (questCompletionItem.Quantity == 1)
+						{
+							rtbMessages.Text += questCompletionItem.Quantity.ToString() + " " + questCompletionItem.Details.Name + Environment.NewLine;
+						}
+						else
+						{
+							rtbMessages.Text += questCompletionItem.Quantity.ToString() + " " + questCompletionItem.Details.NamePlural + Environment.NewLine;
+						}
+					}
+					rtbMessages.Text += Environment.NewLine;
+
+					// 将任务添加到玩家人物列表里
+					_player.Quests.Add(new PlayerQuest(newLocation.QuestAvailableHere));
+				}
+			}
+
+			// 检查该地点是否有怪物存在
+			if (newLocation.MonsterLivingHere != null)
+			{
+				// 有怪物
+				rtbMessages.Text += "You see a " + newLocation.MonsterLivingHere.Name + Environment.NewLine;
+				// 用World类的值创建新的怪物对象
+				Monster standardMonster = World.MonsterByID(newLocation.MonsterLivingHere.ID);
+
+				_currentMonster = new Monster(
+					standardMonster.ID,
+					standardMonster.Name,
+					standardMonster.MaximumDamage,
+					standardMonster.RewardExperiencePoints,
+					standardMonster.RewardGold,
+					standardMonster.CurrentHitPoints,
+					standardMonster.MaximumHitPoints);
+
+				foreach (LootItem lootItem in standardMonster.LootTable)
+				{
+					_currentMonster.LootTable.Add(lootItem);
+				}
+
+				cboWeapons.Visible = true;
+				cboPotions.Visible = true;
+				btnUseWeapon.Visible = true;
+				btnUsePotion.Visible = true;
+			}
+			else
+			{
+				_currentMonster = null;
+
+				cboWeapons.Visible = false;
+				cboPotions.Visible = false;
+				btnUseWeapon.Visible = false;
+				btnUsePotion.Visible = false;
+			}
+
+			// 更新玩家物品栏
+			dgvInventory.RowHeadersVisible = false;
+			dgvInventory.ColumnCount = 2;
+			dgvInventory.Columns[0].Name = "Name";
+			dgvInventory.Columns[0].Width = 197;
+			dgvInventory.Columns[1].Name = "Quantity";
+			dgvInventory.Rows.Clear();
+			foreach (InventoryItem inventoryItem in _player.Inventory)
+			{
+				if (inventoryItem.Quantity > 0)
+				{
+					dgvInventory.Rows.Add(new[]
+					{
+						inventoryItem.Details.Name,
+						inventoryItem.Quantity.ToString()
+					});
+				}
+			}
+
+			// 更新玩家任务栏
+			dgvQuest.RowHeadersVisible = false;
+			dgvQuest.ColumnCount = 2;
+			dgvQuest.Columns[0].Name = "Name";
+			dgvQuest.Columns[0].Width = 197;
+			dgvQuest.Columns[1].Name = "Done?";
+			dgvQuest.Rows.Clear();
+			foreach (PlayerQuest playerQuest in _player.Quests)
+			{
+				dgvQuest.Rows.Add(new[]
+				{
+					playerQuest.Details.Name,
+					playerQuest.IsCompleted.ToString()
+				});
+			}
+
+			// 更新玩家武器列表
+			List<Weapon> weapons = new List<Weapon>();
+			foreach (InventoryItem inventoryItem in _player.Inventory)
+			{
+				if (inventoryItem.Details is Weapon)
+				{
+					if (inventoryItem.Quantity > 0)
+					{
+						weapons.Add((Weapon)inventoryItem.Details);
+					}
+				}
+			}
+			if (weapons.Count == 0)
+			{
+				// 玩家没有任何武器，所以隐藏武器列表和使用按钮
+				cboWeapons.Visible = false;
+				btnUseWeapon.Visible = false;
+			}
+			else
+			{
+				cboWeapons.DataSource = weapons;
+				cboWeapons.DisplayMember = "Name";
+				cboWeapons.ValueMember = "ID";
+				cboWeapons.SelectedIndex = 0;
+			}
+
+			// 更新玩家恢复药水列表
+			List<HealingPotion> healingPotions = new List<HealingPotion>();
+			foreach (InventoryItem inventoryItem in _player.Inventory)
+			{
+				if (inventoryItem.Details is HealingPotion)
+				{
+					if (inventoryItem.Quantity > 0)
+					{
+						healingPotions.Add((HealingPotion)inventoryItem.Details);
+					}
+				}
+			}
+			if (healingPotions.Count == 0)
+			{
+				// 玩家没有任何药水，所以隐藏药水列表和使用按钮
+				cboPotions.Visible = false;
+				btnUsePotion.Visible = false;
+			}
+			else
+			{
+				cboPotions.DataSource = healingPotions;
+				cboPotions.DisplayMember = "Name";
+				cboPotions.ValueMember = "ID";
+				cboPotions.SelectedIndex = 0;
+			}
+		}
