@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace Engine
 {
@@ -28,14 +29,14 @@ namespace Engine
 		public Location CurrentLocation { get; set; }
 
 		/// <summary>
-		/// 玩家生命值
+		/// 玩家对象
 		/// </summary>
 		/// <param name="currentHitPoints">当前生命值</param>
 		/// <param name="maximumHitPoints">最大生命值</param>
 		/// <param name="gold">当前拥有金币</param>
 		/// <param name="experiencePoints">经验值</param>
 		/// <param name="level">等级</param>
-		public Player(int currentHitPoints, int maximumHitPoints, int gold, int experiencePoints)
+		private Player(int currentHitPoints, int maximumHitPoints, int gold, int experiencePoints)
 			: base(currentHitPoints, maximumHitPoints)
 		{
 			Gold = gold;
@@ -43,6 +44,76 @@ namespace Engine
 
 			Inventory = new List<InventoryItem>();
 			Quests = new List<PlayerQuest>();
+		}
+
+		/// <summary>
+		/// 创建新的默认角色
+		/// </summary>
+		/// <returns>创建的角色</returns>
+		public static Player CreateDefaultPlayer()
+		{
+			Player player = new Player(10, 10, 20, 0);
+			// 初始道具（锈剑）
+			player.Inventory.Add(new InventoryItem(World.ItemByID(World.ITEM_ID_RUSTY_SWORD), 1));
+			// 初始地点（家）
+			player.CurrentLocation = World.LocationByID(World.LOCATION_ID_HOME);
+
+			return player;
+		}
+
+		/// <summary>
+		/// 读取XML存档，然后创建角色
+		/// </summary>
+		/// <param name="xmlPlayerData"></param>
+		/// <returns>玩家保存的角色，如果存档损坏，则创建新角色</returns>
+		public static Player CreatePlayerFromXmlString(string xmlPlayerData)
+		{
+			try
+			{
+				XmlDocument playerData = new XmlDocument();
+
+				playerData.LoadXml(xmlPlayerData);
+
+				int currentHitPoints = Convert.ToInt32(playerData.SelectSingleNode("/Player/Stats/CurrentHitPoints").InnerText);
+				int maximumHitPoints = Convert.ToInt32(playerData.SelectSingleNode("/Player/Stats/MaximumHitPoints").InnerText);
+				int gold = Convert.ToInt32(playerData.SelectSingleNode("/Player/Stats/Gold").InnerText);
+				int experiencePoints = Convert.ToInt32(playerData.SelectSingleNode("/Player/Stats/ExperiencePoints").InnerText);
+
+				Player player = new Player(currentHitPoints, maximumHitPoints, gold, experiencePoints);
+
+				int currentLocationID = Convert.ToInt32(playerData.SelectSingleNode("/Player/Stats/CurrentLocation").InnerText);
+				player.CurrentLocation = World.LocationByID(currentLocationID);
+
+				foreach (XmlNode node in playerData.SelectNodes("/Player/InventoryItems/InventoryItem"))
+				{
+					int id = Convert.ToInt32(node.Attributes["ID"].Value);
+					int quantity = Convert.ToInt32(node.Attributes["Quantity"].Value);
+
+					for (int i = 0; i < quantity; i++)
+					{
+						player.AddItemToInventory(World.ItemByID(id));
+					}
+				}
+
+				foreach (XmlNode node in playerData.SelectNodes("/Player/PlayerQuests/PlayerQuest"))
+				{
+					int id = Convert.ToInt32(node.Attributes["ID"].Value);
+					bool isCompleted = Convert.ToBoolean(node.Attributes["IsCompleted"].Value);
+
+					PlayerQuest playerQuest = new PlayerQuest(World.QuestByID(id));
+					playerQuest.IsCompleted = isCompleted;
+
+					player.Quests.Add(playerQuest);
+				}
+
+				return player;
+			}
+			catch
+			{
+				// 如果xml文件有问题，则创建新的角色
+				return Player.CreateDefaultPlayer();
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -160,6 +231,87 @@ namespace Engine
 				// 把它标记任务完成
 				playerQuest.IsCompleted = true;
 			}
+		}
+
+		/// <summary>
+		/// 获取玩家信息，并将其转换为XML字符串
+		/// </summary>
+		/// <returns>转换之后的XML字符串</returns>
+		public string ToXMLString()
+		{
+			XmlDocument playerData = new XmlDocument();
+
+			// 创建顶层 XML 节点
+			XmlNode player = playerData.CreateElement("Player");
+			playerData.AppendChild(player);
+
+			// 创建"Stats"节点用于保存用户的Statistics
+			XmlNode stats = playerData.CreateElement("Stats");
+			player.AppendChild(stats);
+
+			// 在"Stats"节点中创建子节点
+			XmlNode currentHitPoints = playerData.CreateElement("CurrentHitPoints");
+			currentHitPoints.AppendChild(playerData.CreateTextNode(this.CurrentHitPoints.ToString()));
+			stats.AppendChild(currentHitPoints);
+
+			XmlNode maximumHitPoints = playerData.CreateElement("MaximumHitPoints");
+			maximumHitPoints.AppendChild(playerData.CreateTextNode(this.MaximumHitPoints.ToString()));
+			stats.AppendChild(maximumHitPoints);
+
+			XmlNode gold = playerData.CreateElement("Gold");
+			gold.AppendChild(playerData.CreateTextNode(this.Gold.ToString()));
+			stats.AppendChild(gold);
+
+			XmlNode experiencePoints = playerData.CreateElement("ExperiencePoints");
+			experiencePoints.AppendChild(playerData.CreateTextNode(this.ExperiencePoints.ToString()));
+			stats.AppendChild(experiencePoints);
+
+			XmlNode currentLocation = playerData.CreateElement("CurrentLocation");
+			currentLocation.AppendChild(playerData.CreateTextNode(this.CurrentLocation.ID.ToString()));
+			stats.AppendChild(currentLocation);
+
+			// 保存物品栏
+			XmlNode inventoryItems = playerData.CreateElement("InventoryItems");
+			player.AppendChild(inventoryItems);
+
+			// 遍历玩家所有的物品栏
+			foreach (InventoryItem item in this.Inventory)
+			{
+				XmlNode inventoryItem = playerData.CreateElement("InventoryItem");
+
+				XmlAttribute idAttribute = playerData.CreateAttribute("ID");
+				idAttribute.Value = item.Details.ID.ToString();
+				inventoryItem.Attributes.Append(idAttribute);
+
+				XmlAttribute quantityAttribute = playerData.CreateAttribute("Quantity");
+				quantityAttribute.Value = item.Quantity.ToString();
+				inventoryItem.Attributes.Append(quantityAttribute);
+
+				inventoryItems.AppendChild(inventoryItem);
+			}
+
+			// 保存任务列表
+			XmlNode playerQuests = playerData.CreateElement("PlayerQuests");
+			player.AppendChild(playerQuests);
+
+			// 遍历玩家的任务栏
+			foreach (PlayerQuest quest in this.Quests)
+			{
+				XmlNode playerQuest = playerData.CreateElement("PlayerQuest");
+
+				XmlAttribute idAttribute = playerData.CreateAttribute("ID");
+				idAttribute.Value = quest.Details.ID.ToString();
+				playerQuest.Attributes.Append(idAttribute);
+
+				XmlAttribute isCompletedAttribute = playerData.CreateAttribute("IsCompleted");
+				isCompletedAttribute.Value = quest.IsCompleted.ToString();
+				playerQuest.Attributes.Append(isCompletedAttribute);
+
+				playerQuests.AppendChild(playerQuest);
+			}
+
+			//playerData.Save("pretty-save.xml");
+			return playerData.InnerXml; // XML文档，字符串，可以保存到文件
 		}
 	}
 }

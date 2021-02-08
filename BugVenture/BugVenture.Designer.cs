@@ -288,6 +288,7 @@ namespace BugVenture
 			this.Controls.Add(this.label1);
 			this.Name = "BugVenture";
 			this.Text = "Bug Venture - The Game";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.BugVenture_FormClosing);
 			((System.ComponentModel.ISupportInitialize)(this.dgvInventory)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.dgvQuest)).EndInit();
 			this.ResumeLayout(false);

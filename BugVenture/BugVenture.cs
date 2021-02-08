@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 
 using Engine;
 namespace BugVenture
@@ -16,17 +17,23 @@ namespace BugVenture
 		private Player _player;
 		private Monster _currentMonster; // 当前面对的怪物
 
+		// 保存玩家存档的文件
+		private const string PLAYER_DATA_FILE_NAME = "PlayerData.xml";
+
 		public BugVenture()
 		{
 			InitializeComponent();
 
-			// 创建角色
-			_player = new Player(10, 10, 20, 0);
-			// 初始位置（家）
-			MoveTo(World.LocationByID(World.LOCATION_ID_HOME));
-			// 初始武器（锈剑）
-			_player.Inventory.Add(new InventoryItem(World.ItemByID(World.ITEM_ID_RUSTY_SWORD), 1));
+			if (File.Exists(PLAYER_DATA_FILE_NAME))
+			{
+				_player = Player.CreatePlayerFromXmlString(File.ReadAllText(PLAYER_DATA_FILE_NAME));
+			}
+			else
+			{
+				_player = Player.CreateDefaultPlayer();
+			}
 
+			MoveTo(_player.CurrentLocation);
 			// UI显示玩家信息
 			UpdatePlayerStatsInUI();
 		}
@@ -165,7 +172,7 @@ namespace BugVenture
 			}
 
 			// 显示信息
-			rtbMessages.Text += "You drink a " + potion.Name + Environment.NewLine;
+			rtbMessages.Text += "You drink a " + potion.Name + " and healed " + potion.AmountToHeal + " hit points." + Environment.NewLine;
 
 			// 轮到怪物展开攻击
 			MonsterAttack();
@@ -461,6 +468,11 @@ namespace BugVenture
 		{
 			rtbMessages.SelectionStart = rtbMessages.Text.Length;
 			rtbMessages.ScrollToCaret();
+		}
+
+		private void BugVenture_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			File.WriteAllText(PLAYER_DATA_FILE_NAME, _player.ToXMLString());
 		}
 	}
 }
