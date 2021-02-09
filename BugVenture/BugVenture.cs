@@ -58,6 +58,11 @@ namespace BugVenture
 			MoveTo(_player.CurrentLocation.LocationToWest);
 		}
 
+		private void cboWeapons_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			_player.CurrentWeapon = (Weapon)cboWeapons.SelectedItem;
+		}
+
 		private void btnUseWeapon_Click(object sender, EventArgs e)
 		{
 			// 从下拉框中获取当前选中的武器
@@ -400,6 +405,7 @@ namespace BugVenture
 		private void UpdateWeaponListInUI()
 		{
 			List<Weapon> weapons = new List<Weapon>();
+
 			foreach (InventoryItem inventoryItem in _player.Inventory)
 			{
 				if (inventoryItem.Details is Weapon)
@@ -418,10 +424,21 @@ namespace BugVenture
 			}
 			else
 			{
+				// 断开事件监听（因为在切换数据的时候，会触发SelectedIndexChanged监听事件）
+				cboWeapons.SelectedIndexChanged -= cboWeapons_SelectedIndexChanged;
 				cboWeapons.DataSource = weapons;
+				// 增加事件监听
+				cboWeapons.SelectedIndexChanged += cboWeapons_SelectedIndexChanged;
 				cboWeapons.DisplayMember = "Name";
 				cboWeapons.ValueMember = "ID";
-				cboWeapons.SelectedIndex = 0;
+				if (_player.CurrentWeapon != null)
+				{
+					cboWeapons.SelectedItem = _player.CurrentWeapon;
+				}
+				else
+				{
+					cboWeapons.SelectedIndex = 0;
+				}
 			}
 		}
 

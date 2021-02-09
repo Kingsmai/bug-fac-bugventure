@@ -27,6 +27,8 @@ namespace Engine
 		public List<PlayerQuest> Quests { get; set; }
 		// 当前位置
 		public Location CurrentLocation { get; set; }
+		// 当前使用武器
+		public Weapon CurrentWeapon { get; set; }
 
 		/// <summary>
 		/// 玩家对象
@@ -35,7 +37,6 @@ namespace Engine
 		/// <param name="maximumHitPoints">最大生命值</param>
 		/// <param name="gold">当前拥有金币</param>
 		/// <param name="experiencePoints">经验值</param>
-		/// <param name="level">等级</param>
 		private Player(int currentHitPoints, int maximumHitPoints, int gold, int experiencePoints)
 			: base(currentHitPoints, maximumHitPoints)
 		{
@@ -83,6 +84,13 @@ namespace Engine
 
 				int currentLocationID = Convert.ToInt32(playerData.SelectSingleNode("/Player/Stats/CurrentLocation").InnerText);
 				player.CurrentLocation = World.LocationByID(currentLocationID);
+
+				// 因为是更新，所以确保旧的存档不会出错，如果获取不到当前武器则不执行
+				if(playerData.SelectSingleNode("/Player/Stats/CurrentWeapon") != null)
+				{
+					int currentWeaponID = Convert.ToInt32(playerData.SelectSingleNode("/Player/Stats/CurrentWeapon").InnerText);
+					player.CurrentWeapon = (Weapon)World.ItemByID(currentWeaponID);
+				}
 
 				foreach (XmlNode node in playerData.SelectNodes("/Player/InventoryItems/InventoryItem"))
 				{
@@ -269,6 +277,13 @@ namespace Engine
 			XmlNode currentLocation = playerData.CreateElement("CurrentLocation");
 			currentLocation.AppendChild(playerData.CreateTextNode(this.CurrentLocation.ID.ToString()));
 			stats.AppendChild(currentLocation);
+
+			if (CurrentWeapon != null)
+			{
+				XmlNode currentWeapon = playerData.CreateElement("CurrentWeapon");
+				currentWeapon.AppendChild(playerData.CreateTextNode(this.CurrentWeapon.ID.ToString()));
+				stats.AppendChild(currentWeapon);
+			}
 
 			// 保存物品栏
 			XmlNode inventoryItems = playerData.CreateElement("InventoryItems");
