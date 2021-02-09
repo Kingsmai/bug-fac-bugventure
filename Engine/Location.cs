@@ -47,6 +47,9 @@ namespace Engine
 			ID = id;
 			Name = name;
 			Description = description;
+			ItemRequiredToEnter = itemRequiredToEnter;
+			QuestAvailableHere = questAvailableHere;
+			MonsterLivingHere = monsterLivingHere;
 		}
 	}
 }

@@ -12,7 +12,7 @@ namespace Engine
 		// 金币
 		public int Gold { get; set; }
 		// 经验值
-		public int ExperiencePoints { get; set; }
+		public int ExperiencePoints { get; private set; }
 		// 等级
 		public int Level
 		{
@@ -60,6 +60,16 @@ namespace Engine
 			player.CurrentLocation = World.LocationByID(World.LOCATION_ID_HOME);
 
 			return player;
+		}
+
+		/// <summary>
+		/// 增加角色经验值，并计算最大生命值
+		/// </summary>
+		/// <param name="experiencePointsToAdd">需要增加的生命值</param>
+		public void AddExperiencePoints(int experiencePointsToAdd)
+		{
+			ExperiencePoints += experiencePointsToAdd;
+			MaximumHitPoints = (Level * 10);
 		}
 
 		/// <summary>
