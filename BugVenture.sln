@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BugVenture", "BugVenture.csproj", "{A39E2AE0-DBFE-45FC-8953-D2F7778CE248}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BugVenture", "BugVenture\BugVenture.csproj", "{A39E2AE0-DBFE-45FC-8953-D2F7778CE248}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine", "..\Engine\Engine.csproj", "{5E07D684-F363-4A20-9E40-CDDC8C21C4A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine", "Engine\Engine.csproj", "{5E07D684-F363-4A20-9E40-CDDC8C21C4A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
