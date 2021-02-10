@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,12 +10,36 @@ namespace Engine
 	/// <summary>
 	/// 背包中的物品，保存物品的信息和物品数量
 	/// </summary>
-	public class InventoryItem
+	public class InventoryItem : INotifyPropertyChanged
 	{
 		// 物品详情
-		public Item Details { get; set; }
+		private Item _details;
+		public Item Details
+		{
+			get { return _details; }
+			set
+			{
+				_details = value;
+				OnPropertyChanged("Details");
+			}
+		}
 		// 物品数量
-		public int Quantity { get; set; }
+		private int _quantity;
+		public int Quantity
+		{
+			get { return _quantity; }
+			set
+			{
+				_quantity = value;
+				OnPropertyChanged("Quantity");
+				OnPropertyChanged("Description");
+			}
+		}
+		// 物品简介，获取物品名称
+		public string Description
+		{
+			get { return Quantity > 1 ? Details.NamePlural : Details.Name; }
+		}
 
 		/// <summary>
 		/// 背包中的物品
@@ -25,6 +50,16 @@ namespace Engine
 		{
 			Details = details;
 			Quantity = quantity;
+		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		public void OnPropertyChanged(string name)
+		{
+			if (PropertyChanged != null)
+			{
+				PropertyChanged(this, new PropertyChangedEventArgs(name));
+			}
 		}
 	}
 }

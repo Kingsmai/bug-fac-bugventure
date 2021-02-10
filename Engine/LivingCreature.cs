@@ -48,7 +48,6 @@ namespace Engine
 		/// <param name="name"></param>
 		protected void OnPropertyChanged(string name)
 		{
-			Console.WriteLine("这时候触发了PropertyChanged: " + name);
 			if (PropertyChanged != null)
 			{
 				PropertyChanged(this, new PropertyChangedEventArgs(name));

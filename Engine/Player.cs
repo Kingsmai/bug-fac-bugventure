@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using System.ComponentModel;
 
 namespace Engine
 {
@@ -42,7 +43,9 @@ namespace Engine
 			// 我们不需要手动修改等级，所以把set删掉了。
 		}
 		// 物品栏
-		public List<InventoryItem> Inventory { get; set; }
+		// To bind a list property, you need to change its datatype to either BindingList or
+		// ObservableCollection.BindingList gives more options than ObservableCollection – like searching and sorting.
+		public BindingList<InventoryItem> Inventory { get; set; }
 		// 当前任务
 		public List<PlayerQuest> Quests { get; set; }
 		// 当前位置
@@ -63,7 +66,7 @@ namespace Engine
 			Gold = gold;
 			ExperiencePoints = experiencePoints;
 
-			Inventory = new List<InventoryItem>();
+			Inventory = new BindingList<InventoryItem>();
 			Quests = new List<PlayerQuest>();
 		}
 
@@ -168,7 +171,8 @@ namespace Engine
 			}
 			// 检查玩家物品栏里是否有所需要的关键道具，使用LINQ写法遍历玩家物品栏
 			// Exists方法用于检查Inventory列表里有没有该道具，则返回true，否则返回false
-			return Inventory.Exists(inventoryItem => inventoryItem.Details.ID == location.ItemRequiredToEnter.ID);
+			// 改成BindingList之后，将Exists方法改为Any方法（作用一样）
+			return Inventory.Any(inventoryItem => inventoryItem.Details.ID == location.ItemRequiredToEnter.ID);
 		}
 
 		/// <summary>
@@ -208,7 +212,7 @@ namespace Engine
 			foreach (QuestCompletionItem qci in quest.QuestCompletionItems)
 			{
 				// 检查玩家物品栏里是否有对应的道具，如果有，检查他们的数量是否达到要求
-				if (!Inventory.Exists(ii => ii.Details.ID == qci.Details.ID && ii.Quantity >= qci.Quantity))
+				if (!Inventory.Any(ii => ii.Details.ID == qci.Details.ID && ii.Quantity >= qci.Quantity))
 				{
 					// 如果没有达到其中一项要求，则直接返回false，不用继续检查后面的条件。
 					return false;

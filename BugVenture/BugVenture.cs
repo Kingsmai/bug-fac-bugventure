@@ -33,6 +33,7 @@ namespace BugVenture
 				_player = Player.CreateDefaultPlayer();
 			}
 
+			// 绑定数据
 			// For the lblHitPoints control, add a databinding – a subscription to a property's notifications.
 			// The databinding will connect to the Text property of lblHitPoints to the 
 			// CurrentHitPoints property of the _player object.
@@ -41,9 +42,25 @@ namespace BugVenture
 			lblExperience.DataBindings.Add("Text", _player, "ExperiencePoints");
 			lblLevel.DataBindings.Add("Text", _player, "Level");
 
+			// 不显示左边的header
+			dgvInventory.RowHeadersVisible = false;
+			// 阻止datagridview根据类的字段产生列表
+			dgvInventory.AutoGenerateColumns = false;
+			// 列表dataSource是角色的物品栏
+			dgvInventory.DataSource = _player.Inventory;
+			dgvInventory.Columns.Add(new DataGridViewTextBoxColumn
+			{
+				HeaderText = "Name", // 显示在DataGridView里的字段
+				Width = 197,
+				DataPropertyName = "Description" // 数据段
+			});
+			dgvInventory.Columns.Add(new DataGridViewTextBoxColumn
+			{
+				HeaderText = "Quantity",
+				DataPropertyName = "Quantity"
+			});
+
 			MoveTo(_player.CurrentLocation);
-			// UI显示玩家信息（绑定数据之后就不需要更新UI了，因为会自动根据玩家的属性更新）
-			//UpdatePlayerStatsInUI();
 		}
 
 		private void btnNorth_Click(object sender, EventArgs e)
@@ -139,10 +156,7 @@ namespace BugVenture
 					}
 				}
 
-				// 刷新角色信息和物品栏控制
-				//UpdatePlayerStatsInUI();
-
-				UpdateInventoryListInUI();
+				// 刷新UI
 				UpdateWeaponListInUI();
 				UpdatePotionListInUI();
 
@@ -190,9 +204,7 @@ namespace BugVenture
 			// 轮到怪物展开攻击
 			MonsterAttack();
 
-			// 刷新玩家UI
-			//UpdatePlayerStatsInUI();
-			UpdateInventoryListInUI();
+			// 刷新UI
 			UpdatePotionListInUI();
 		}
 
@@ -336,7 +348,6 @@ namespace BugVenture
 			}
 
 			// 更新UI
-			UpdateInventoryListInUI();
 			UpdateQuestListInUI();
 			UpdateWeaponListInUI();
 			UpdatePotionListInUI();
@@ -479,7 +490,7 @@ namespace BugVenture
 			}
 		}
 
-		// 更新玩家状态
+		// 更新玩家状态（绑定数据之后就不需要更新UI了，因为会自动根据玩家的属性更新）
 		private void UpdatePlayerStatsInUI()
 		{
 			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
