@@ -33,9 +33,17 @@ namespace BugVenture
 				_player = Player.CreateDefaultPlayer();
 			}
 
+			// For the lblHitPoints control, add a databinding – a subscription to a property's notifications.
+			// The databinding will connect to the Text property of lblHitPoints to the 
+			// CurrentHitPoints property of the _player object.
+			lblHitPoints.DataBindings.Add("Text", _player, "CurrentHitPoints");
+			lblGold.DataBindings.Add("Text", _player, "Gold");
+			lblExperience.DataBindings.Add("Text", _player, "ExperiencePoints");
+			lblLevel.DataBindings.Add("Text", _player, "Level");
+
 			MoveTo(_player.CurrentLocation);
-			// UI显示玩家信息
-			UpdatePlayerStatsInUI();
+			// UI显示玩家信息（绑定数据之后就不需要更新UI了，因为会自动根据玩家的属性更新）
+			//UpdatePlayerStatsInUI();
 		}
 
 		private void btnNorth_Click(object sender, EventArgs e)
@@ -132,7 +140,7 @@ namespace BugVenture
 				}
 
 				// 刷新角色信息和物品栏控制
-				UpdatePlayerStatsInUI();
+				//UpdatePlayerStatsInUI();
 
 				UpdateInventoryListInUI();
 				UpdateWeaponListInUI();
@@ -183,7 +191,7 @@ namespace BugVenture
 			MonsterAttack();
 
 			// 刷新玩家UI
-			UpdatePlayerStatsInUI();
+			//UpdatePlayerStatsInUI();
 			UpdateInventoryListInUI();
 			UpdatePotionListInUI();
 		}
@@ -217,7 +225,7 @@ namespace BugVenture
 			_player.CurrentHitPoints = _player.MaximumHitPoints;
 
 			// UI更新HP值
-			UpdatePlayerStatsInUI();
+			//UpdatePlayerStatsInUI();
 
 			// 当前地点是否有任务
 			if (newLocation.QuestAvailableHere != null)
@@ -347,7 +355,7 @@ namespace BugVenture
 			_player.CurrentHitPoints -= damageToPlayer;
 
 			// 刷新玩家生命值
-			UpdatePlayerStatsInUI();
+			//UpdatePlayerStatsInUI();
 
 			// 检查玩家是否死亡
 			if (_player.CurrentHitPoints <= 0)

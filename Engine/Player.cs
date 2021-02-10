@@ -10,9 +10,29 @@ namespace Engine
 	public class Player : LivingCreature
 	{
 		// 金币
-		public int Gold { get; set; }
+		private int _gold;
+
+		public int Gold 
+		{
+			get { return _gold; }
+			set
+			{
+				_gold = value;
+				OnPropertyChanged("Gold");
+			}
+		}
 		// 经验值
-		public int ExperiencePoints { get; private set; }
+		private int _experiencePoints;
+
+		public int ExperiencePoints { 
+			get { return _experiencePoints; }
+			private set
+			{
+				_experiencePoints = value;
+				OnPropertyChanged("ExperiencePoints");
+				OnPropertyChanged("Level"); // 我们没有set等级的值，它的值是被计算的，所以根据经验值直接发出通知就行
+			}
+		}
 		// 等级
 		public int Level
 		{
