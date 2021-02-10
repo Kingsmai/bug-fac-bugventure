@@ -33,7 +33,7 @@ namespace BugVenture
 				_player = Player.CreateDefaultPlayer();
 			}
 
-			// 绑定数据
+			// 绑定数据（玩家数值）
 			// For the lblHitPoints control, add a databinding – a subscription to a property's notifications.
 			// The databinding will connect to the Text property of lblHitPoints to the 
 			// CurrentHitPoints property of the _player object.
@@ -42,6 +42,7 @@ namespace BugVenture
 			lblExperience.DataBindings.Add("Text", _player, "ExperiencePoints");
 			lblLevel.DataBindings.Add("Text", _player, "Level");
 
+			// 绑定数据（物品栏列表）
 			// 不显示左边的header
 			dgvInventory.RowHeadersVisible = false;
 			// 阻止datagridview根据类的字段产生列表
@@ -58,6 +59,21 @@ namespace BugVenture
 			{
 				HeaderText = "Quantity",
 				DataPropertyName = "Quantity"
+			});
+
+			dgvQuest.RowHeadersVisible = false;
+			dgvQuest.AutoGenerateColumns = false;
+			dgvQuest.DataSource = _player.Quests;
+			dgvQuest.Columns.Add(new DataGridViewTextBoxColumn
+			{
+				HeaderText = "Name",
+				Width = 197,
+				DataPropertyName = "Name"
+			});
+			dgvQuest.Columns.Add(new DataGridViewTextBoxColumn
+			{
+				HeaderText = "Done?",
+				DataPropertyName = "IsCompleted"
 			});
 
 			MoveTo(_player.CurrentLocation);
@@ -348,7 +364,6 @@ namespace BugVenture
 			}
 
 			// 更新UI
-			UpdateQuestListInUI();
 			UpdateWeaponListInUI();
 			UpdatePotionListInUI();
 		}

@@ -13,7 +13,7 @@ namespace Engine
 		// 金币
 		private int _gold;
 
-		public int Gold 
+		public int Gold
 		{
 			get { return _gold; }
 			set
@@ -25,7 +25,8 @@ namespace Engine
 		// 经验值
 		private int _experiencePoints;
 
-		public int ExperiencePoints { 
+		public int ExperiencePoints
+		{
 			get { return _experiencePoints; }
 			private set
 			{
@@ -47,7 +48,7 @@ namespace Engine
 		// ObservableCollection.BindingList gives more options than ObservableCollection – like searching and sorting.
 		public BindingList<InventoryItem> Inventory { get; set; }
 		// 当前任务
-		public List<PlayerQuest> Quests { get; set; }
+		public BindingList<PlayerQuest> Quests { get; set; }
 		// 当前位置
 		public Location CurrentLocation { get; set; }
 		// 当前使用武器
@@ -67,7 +68,7 @@ namespace Engine
 			ExperiencePoints = experiencePoints;
 
 			Inventory = new BindingList<InventoryItem>();
-			Quests = new List<PlayerQuest>();
+			Quests = new BindingList<PlayerQuest>();
 		}
 
 		/// <summary>
@@ -119,7 +120,7 @@ namespace Engine
 				player.CurrentLocation = World.LocationByID(currentLocationID);
 
 				// 因为是更新，所以确保旧的存档不会出错，如果获取不到当前武器则不执行
-				if(playerData.SelectSingleNode("/Player/Stats/CurrentWeapon") != null)
+				if (playerData.SelectSingleNode("/Player/Stats/CurrentWeapon") != null)
 				{
 					int currentWeaponID = Convert.ToInt32(playerData.SelectSingleNode("/Player/Stats/CurrentWeapon").InnerText);
 					player.CurrentWeapon = (Weapon)World.ItemByID(currentWeaponID);
@@ -182,7 +183,7 @@ namespace Engine
 		/// <returns>如果有任务则返回true</returns>
 		public bool HasThisQuest(Quest quest)
 		{
-			return Quests.Exists(playerQuest => playerQuest.Details.ID == quest.ID);
+			return Quests.Any(playerQuest => playerQuest.Details.ID == quest.ID);
 		}
 
 		/// <summary>

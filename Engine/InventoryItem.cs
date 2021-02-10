@@ -35,7 +35,7 @@ namespace Engine
 				OnPropertyChanged("Description");
 			}
 		}
-		// 物品简介，获取物品名称
+		// 物品简介，获取物品名称（因为UI绑定时，不能通过Details.Name访问物品名）
 		public string Description
 		{
 			get { return Quantity > 1 ? Details.NamePlural : Details.Name; }
