@@ -49,6 +49,17 @@ namespace Engine
 		public BindingList<InventoryItem> Inventory { get; set; }
 		// 当前任务
 		public BindingList<PlayerQuest> Quests { get; set; }
+		// 当前拥有武器列表
+		public List<Weapon> Weapons
+		{
+			// 如果列表元素是武器类，则把该对象转成新的list（我们只需要InventoryItems的Details属性，不需要Quantity属性）
+			get { return Inventory.Where(x => x.Details is Weapon).Select(x => x.Details as Weapon).ToList(); }
+		}
+		// 当前拥有药水列表
+		public List<HealingPotion> Potions
+		{
+			get { return Inventory.Where(x => x.Details is HealingPotion).Select(x => x.Details as HealingPotion).ToList(); }
+		}
 		// 当前位置
 		public Location CurrentLocation { get; set; }
 		// 当前使用武器
@@ -94,6 +105,64 @@ namespace Engine
 		{
 			ExperiencePoints += experiencePointsToAdd;
 			MaximumHitPoints = (Level * 10);
+		}
+
+		/// <summary>
+		/// 移除玩家物品栏的道具
+		/// </summary>
+		/// <param name="itemToRemove">需要移除的道具</param>
+		/// <param name="quantity">需要移除的数量</param>
+		public void RemoveItemFromInventory(Item itemToRemove, int quantity = 1)
+		{
+			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToRemove.ID);
+
+			if (item == null)
+			{
+				// 该道具没有出现在玩家的物品栏里
+				// 可能需要根据此情况给出报错信息
+			}
+			else
+			{
+				// 该道具有在玩家物品栏里，所以需要减少数量
+				item.Quantity -= quantity;
+
+				// 确保我们得到的值不会变成负数
+				if (item.Quantity < 0)
+				{
+					item.Quantity = 0;
+				}
+
+				// 当物品数量 = 0，则在物品栏里删除该物品
+				if (item.Quantity == 0)
+				{
+					Inventory.Remove(item);
+				}
+
+				// 通知UI，物品栏被更新了
+				RaiseInventoryChangedEvent(itemToRemove);
+			}
+		}
+
+		/// <summary>
+		/// 增加道具到玩家物品栏
+		/// </summary>
+		/// <param name="itemToAdd">需要增加的道具</param>
+		/// <param name="quantity">增加道具的数量</param>
+		public void AddItemToInventory(Item itemToAdd, int quantity = 1)
+		{
+			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToAdd.ID);
+
+			if (item == null)
+			{
+				// 物品栏里没有这个道具，所以增加新的
+				Inventory.Add(new InventoryItem(itemToAdd, quantity));
+			}
+			else
+			{
+				// 物品栏里有这个道具，所以添加数量
+				item.Quantity += quantity;
+			}
+			RaiseInventoryChangedEvent(itemToAdd);
 		}
 
 		/// <summary>
@@ -236,7 +305,7 @@ namespace Engine
 				if (item != null)
 				{
 					// 减去任务道具
-					item.Quantity -= qci.Quantity;
+					RemoveItemFromInventory(item.Details, qci.Quantity);
 				}
 			}
 		}
@@ -362,6 +431,22 @@ namespace Engine
 
 			//playerData.Save("pretty-save.xml");
 			return playerData.InnerXml; // XML文档，字符串，可以保存到文件
+		}
+
+		/// <summary>
+		/// 当Inventory改变的时候，调用此方法，通知UI界面。
+		/// </summary>
+		/// <param name="item">检测物品</param>
+		private void RaiseInventoryChangedEvent(Item item)
+		{
+			if (item is Weapon)
+			{
+				OnPropertyChanged("Weapons");
+			}
+			if (item is HealingPotion)
+			{
+				OnPropertyChanged("Potions");
+			}
 		}
 	}
 }

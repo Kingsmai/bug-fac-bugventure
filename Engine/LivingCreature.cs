@@ -40,6 +40,7 @@ namespace Engine
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		/// <summary>
+		/// 这是“告诉”UI，什么东西(name)的值被改变了。
 		/// The OnPropertyChanged() function checks if anything is subscribed to the event. If nothing
 		/// is subscribed, then PropertyChanged will be null. If PropertyChanged is not null, then another
 		/// class wants to be notified of changes, so the next line will run, and a PropertyChanged event

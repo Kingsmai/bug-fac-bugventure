@@ -61,6 +61,7 @@ namespace BugVenture
 				DataPropertyName = "Quantity"
 			});
 
+			// 绑定数据（任务栏列表）
 			dgvQuest.RowHeadersVisible = false;
 			dgvQuest.AutoGenerateColumns = false;
 			dgvQuest.DataSource = _player.Quests;
@@ -75,6 +76,22 @@ namespace BugVenture
 				HeaderText = "Done?",
 				DataPropertyName = "IsCompleted"
 			});
+
+			// 绑定数据（武器列表和药品列表）
+			cboWeapons.DataSource = _player.Weapons;
+			cboWeapons.DisplayMember = "Name";
+			cboWeapons.ValueMember = "ID";
+			if (_player.CurrentWeapon != null)
+			{
+				cboWeapons.SelectedItem = _player.CurrentWeapon;
+			}
+			cboWeapons.SelectedIndexChanged += cboWeapons_SelectedIndexChanged;
+
+			cboPotions.DataSource = _player.Potions;
+			cboPotions.DisplayMember = "Name";
+			cboPotions.ValueMember = "ID";
+
+			_player.PropertyChanged += PlayerOnPropertyChange;
 
 			MoveTo(_player.CurrentLocation);
 		}
@@ -172,10 +189,6 @@ namespace BugVenture
 					}
 				}
 
-				// 刷新UI
-				UpdateWeaponListInUI();
-				UpdatePotionListInUI();
-
 				// 在信息框中添加一行空行，美观
 				rtbMessages.Text += Environment.NewLine;
 
@@ -205,23 +218,35 @@ namespace BugVenture
 			}
 
 			// 从物品栏中删除药品
-			foreach (InventoryItem inventoryItem in _player.Inventory)
-			{
-				if (inventoryItem.Details.ID == potion.ID)
-				{
-					inventoryItem.Quantity--;
-					break;
-				}
-			}
+			_player.RemoveItemFromInventory(potion, 1);
 
 			// 显示信息
 			rtbMessages.Text += "You drink a " + potion.Name + " and healed " + potion.AmountToHeal + " hit points." + Environment.NewLine;
 
 			// 轮到怪物展开攻击
 			MonsterAttack();
+		}
 
-			// 刷新UI
-			UpdatePotionListInUI();
+		private void PlayerOnPropertyChange(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+		{
+			if (propertyChangedEventArgs.PropertyName == "Weapons")
+			{
+				cboWeapons.DataSource = _player.Weapons;
+				if (!_player.Weapons.Any())
+				{
+					cboWeapons.Visible = false;
+					btnUseWeapon.Visible = false;
+				}
+			}
+			if (propertyChangedEventArgs.PropertyName == "Potions")
+			{
+				cboPotions.DataSource = _player.Potions;
+				if (!_player.Potions.Any())
+				{
+					cboPotions.Visible = false;
+					btnUsePotion.Visible = false;
+				}
+			}
 		}
 
 		// 移动到新的地图
@@ -348,10 +373,10 @@ namespace BugVenture
 					_currentMonster.LootTable.Add(lootItem);
 				}
 
-				cboWeapons.Visible = true;
-				cboPotions.Visible = true;
-				btnUseWeapon.Visible = true;
-				btnUsePotion.Visible = true;
+				cboWeapons.Visible = _player.Weapons.Any();
+				cboPotions.Visible = _player.Potions.Any();
+				btnUseWeapon.Visible = _player.Weapons.Any();
+				btnUsePotion.Visible = _player.Potions.Any();
 			}
 			else
 			{
@@ -362,10 +387,6 @@ namespace BugVenture
 				btnUseWeapon.Visible = false;
 				btnUsePotion.Visible = false;
 			}
-
-			// 更新UI
-			UpdateWeaponListInUI();
-			UpdatePotionListInUI();
 		}
 
 		// 怪物回合（攻击）
