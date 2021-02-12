@@ -20,6 +20,8 @@ namespace Engine
 		public Quest QuestAvailableHere { get; set; }
 		// 在这个场景的生物
 		public Monster MonsterLivingHere { get; set; }
+		// 在这个场景的商贩
+		public Vendor VendorWorkingHere { get; set; }
 		// 北方
 		public Location LocationToNorth { get; set; }
 		// 东方
