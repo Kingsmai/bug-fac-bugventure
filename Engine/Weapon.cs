@@ -21,8 +21,8 @@ namespace Engine
 		/// <param name="namePlural">复数武器名</param>
 		/// <param name="minimumDamage">最小伤害</param>
 		/// <param name="maximumDamage">最大伤害</param>
-		public Weapon(int id, string name, string namePlural, int minimumDamage, int maximumDamage)
-			: base (id, name, namePlural)
+		public Weapon(int id, string name, string namePlural, int minimumDamage, int maximumDamage, int price)
+			: base (id, name, namePlural, price)
 		{
 			MinimumDamage = minimumDamage;
 			MaximumDamage = maximumDamage;

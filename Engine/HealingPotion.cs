@@ -18,8 +18,8 @@ namespace Engine
 		/// <param name="name">物品名称（单数）</param>
 		/// <param name="namePlural">物品名称（复数）</param>
 		/// <param name="amountToHeal">恢复量</param>
-		public HealingPotion(int id, string name, string namePlural, int amountToHeal)
-			: base(id, name, namePlural) // base() 是父类的构造函数
+		public HealingPotion(int id, string name, string namePlural, int amountToHeal, int price)
+			: base(id, name, namePlural, price) // base() 是父类的构造函数
 		{
 			AmountToHeal = amountToHeal;
 		}
