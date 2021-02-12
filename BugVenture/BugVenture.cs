@@ -139,6 +139,14 @@ namespace BugVenture
 			_player.UsePotion(potion);
 		}
 
+		private void btnTrade_Click(object sender, EventArgs e)
+		{
+			// 显示交易页面
+			TradingScreen tradingScreen = new TradingScreen(_player);
+			tradingScreen.StartPosition = FormStartPosition.CenterParent;
+			tradingScreen.ShowDialog(this);
+		}
+
 		private void PlayerOnPropertyChange(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
 		{
 			if (propertyChangedEventArgs.PropertyName == "Weapons")
@@ -187,6 +195,9 @@ namespace BugVenture
 					btnUseWeapon.Visible = _player.Weapons.Any();
 					btnUsePotion.Visible = _player.Potions.Any();
 				}
+
+				// 检查是否有商贩，是否需要显示trade按钮
+				btnTrade.Visible = (_player.CurrentLocation.VendorWorkingHere != null);
 			}
 		}
 

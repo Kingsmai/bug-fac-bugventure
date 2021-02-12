@@ -40,6 +40,16 @@ namespace Engine
 		{
 			get { return Quantity > 1 ? Details.NamePlural : Details.Name; }
 		}
+		// 【只读】获取物品ID
+		public int ItemID
+		{
+			get { return Details.ID; }
+		}
+		// 【只读】获取物品价格
+		public int Price
+		{
+			get { return Details.Price; }
+		}
 
 		/// <summary>
 		/// 背包中的物品

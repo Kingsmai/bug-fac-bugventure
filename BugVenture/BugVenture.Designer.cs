@@ -50,6 +50,7 @@ namespace BugVenture
 			this.rtbMessages = new System.Windows.Forms.RichTextBox();
 			this.dgvInventory = new System.Windows.Forms.DataGridView();
 			this.dgvQuest = new System.Windows.Forms.DataGridView();
+			this.btnTrade = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.dgvInventory)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.dgvQuest)).BeginInit();
 			this.SuspendLayout();
@@ -258,6 +259,16 @@ namespace BugVenture
 			this.dgvQuest.RowHeadersVisible = false;
 			this.dgvQuest.Size = new System.Drawing.Size(321, 189);
 			this.dgvQuest.TabIndex = 12;
+			//
+			// btnTrade
+			//
+			this.btnTrade.Location = new System.Drawing.Point(493, 620);
+			this.btnTrade.Name = "btnTrade";
+			this.btnTrade.Size = new System.Drawing.Size(75, 23);
+			this.btnTrade.TabIndex = 13;
+			this.btnTrade.Text = "Trade";
+			this.btnTrade.UseVisualStyleBackColor = true;
+			this.btnTrade.Click += new System.EventHandler(this.btnTrade_Click);
 			// 
 			// BugVenture
 			// 
@@ -285,6 +296,7 @@ namespace BugVenture
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.label1);
+			this.Controls.Add(this.btnTrade);
 			this.Name = "BugVenture";
 			this.Text = "Bug Venture - The Game";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.BugVenture_FormClosing);
@@ -318,6 +330,7 @@ namespace BugVenture
 		private System.Windows.Forms.RichTextBox rtbMessages;
 		private System.Windows.Forms.DataGridView dgvInventory;
 		private System.Windows.Forms.DataGridView dgvQuest;
+		private System.Windows.Forms.Button btnTrade;
 	}
 }
 
