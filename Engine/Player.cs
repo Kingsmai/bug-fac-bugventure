@@ -237,6 +237,22 @@ namespace Engine
 		}
 
 		/// <summary>
+		/// 读取database传回来的值，然后创建角色
+		/// </summary>
+		/// <param name="currentHitPoints">当前生命值</param>
+		/// <param name="maximumHitPoints">最大生命值</param>
+		/// <param name="gold">金币</param>
+		/// <param name="experiencePoints">经验值</param>
+		/// <param name="currentLocationID">当前位置ID</param>
+		/// <returns></returns>
+		public static Player CreatePlayerFromDatabase(int currentHitPoints, int maximumHitPoints, int gold, int experiencePoints, int currentLocationID)
+		{
+			Player player = new Player(currentHitPoints, maximumHitPoints, gold, experiencePoints);
+			player.MoveTo(World.LocationByID(currentLocationID));
+			return player;
+		}
+
+		/// <summary>
 		/// 检查玩家是否拥有进入这个场景所需要的关键道具
 		/// </summary>
 		/// <param name="location">所需要进入的场景</param>

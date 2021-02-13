@@ -23,13 +23,18 @@ namespace BugVenture
 		{
 			InitializeComponent();
 
-			if (File.Exists(PLAYER_DATA_FILE_NAME))
+			_player = PlayerDataMapper.CreateFromDatabase();
+
+			if (_player == null)
 			{
-				_player = Player.CreatePlayerFromXmlString(File.ReadAllText(PLAYER_DATA_FILE_NAME));
-			}
-			else
-			{
-				_player = Player.CreateDefaultPlayer();
+				if (File.Exists(PLAYER_DATA_FILE_NAME))
+				{
+					_player = Player.CreatePlayerFromXmlString(File.ReadAllText(PLAYER_DATA_FILE_NAME));
+				}
+				else
+				{
+					_player = Player.CreateDefaultPlayer();
+				}
 			}
 
 			// 绑定数据（玩家数值）
@@ -204,6 +209,8 @@ namespace BugVenture
 		private void BugVenture_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			File.WriteAllText(PLAYER_DATA_FILE_NAME, _player.ToXMLString());
+
+			PlayerDataMapper.SaveToDatabase(_player);
 		}
 
 		private void DisplayMessage(object sender, MessageEventArgs messageEventArgs)
