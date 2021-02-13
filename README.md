@@ -2,7 +2,7 @@
 
 纯UI学习向游戏，学习资源：[(scottlilly.com)](https://scottlilly.com/)
 
-![image-20210213140259186](C:\SourceCode\bug-fac-bugventure\gameScreenshot.png)
+![gameScreenshot.png](gameScreenshot.png)
 
 ## 2021-02-13 数据库更新
 
