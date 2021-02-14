@@ -182,7 +182,7 @@ namespace BugVenture
 				btnWest.Visible = (_player.CurrentLocation.LocationToWest != null);
 
 				// 显示当前位置信息
-				rtbLocation.Text += _player.CurrentLocation.Name + Environment.NewLine;
+				rtbLocation.Text = _player.CurrentLocation.Name + Environment.NewLine;
 				rtbLocation.Text += _player.CurrentLocation.Description + Environment.NewLine;
 
 				//
