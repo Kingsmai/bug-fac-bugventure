@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Data;
-using System.Data.SqlClient;
-using MySql.Data.MySqlClient;
 
 namespace Engine
 {
@@ -15,7 +10,7 @@ namespace Engine
 	public static class PlayerDataMapper
 	{
 		// 链接字符串：https://www.connectionstrings.com/
-		private static readonly string _connectionString = 
+		private static readonly string _connectionString =
 			"server=localhost;" +
 			"uid=root;" +
 			"pwd=123456;" +
@@ -260,7 +255,7 @@ namespace Engine
 					// 插入数据
 					foreach (InventoryItem inventoryItem in player.Inventory)
 					{
-						using(MySqlCommand insertInventoryCommand = connection.CreateCommand())
+						using (MySqlCommand insertInventoryCommand = connection.CreateCommand())
 						{
 							insertInventoryCommand.CommandType = CommandType.Text;
 							insertInventoryCommand.CommandText =
