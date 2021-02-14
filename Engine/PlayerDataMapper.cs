@@ -42,7 +42,7 @@ namespace Engine
 					{
 						savedGameCommand.CommandType = CommandType.Text;
 						// 该SQL语句读取SavedGame表中的第一行。对于此程序，我们应该永远只有一行，但这将确保我们在SQL查询结果中仅获得一条记录。
-						savedGameCommand.CommandText = "SELECT TOP 1 * FROM saved_game";
+						savedGameCommand.CommandText = "SELECT * FROM saved_game LIMIT 1";
 
 						// 当您希望查询返回一行或多行时，请使用ExecuteReader
 						MySqlDataReader reader = savedGameCommand.ExecuteReader();
@@ -67,6 +67,7 @@ namespace Engine
 						// 用保存的值创建玩家对象
 						player = Player.CreatePlayerFromDatabase(currentHitPoints, MaximumHitPoints, gold, experiencePoints, currentLocationID);
 
+						reader.Close();
 					}
 
 					// 读取Quest表中的数据，然后添加到玩家对象里
@@ -92,6 +93,8 @@ namespace Engine
 								player.Quests.Add(playerQuest);
 							}
 						}
+
+						reader.Close();
 					}
 
 					// 读取Inventory表中的数据，然后添加到玩家对象里
@@ -113,6 +116,8 @@ namespace Engine
 								player.AddItemToInventory(World.ItemByID(inventoryItemID), quantity);
 							}
 						}
+
+						reader.Close();
 					}
 
 					return player;
