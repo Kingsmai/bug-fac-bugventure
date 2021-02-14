@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Engine
+﻿namespace Engine
 {
 	/// <summary>
 	/// 怪物会掉落的物品、数量、掉落概率、保底战利品（如果没有任何战利品被随机出来）

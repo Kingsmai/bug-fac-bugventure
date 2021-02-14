@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Engine
 {
@@ -33,7 +29,7 @@ namespace Engine
 		/// <param name="rewardGold">击杀获得金币</param>
 		/// <param name="currentHitPoints">当前生命值</param>
 		/// <param name="maximumHitPoints">最大生命值</param>
-		public Monster(int id, string name, int maximumDamage, int rewardExperiencePoints, int rewardGold, 
+		public Monster(int id, string name, int maximumDamage, int rewardExperiencePoints, int rewardGold,
 			int currentHitPoints, int maximumHitPoints)
 			: base(currentHitPoints, maximumHitPoints)
 		{
