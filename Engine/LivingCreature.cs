@@ -20,6 +20,8 @@ namespace Engine
 		// 最大生命值
 		public int MaximumHitPoints { get; set; }
 
+		public bool IsDead { get { return CurrentHitPoints <= 0; } }
+
 		/// <summary>
 		/// 生物
 		/// </summary>

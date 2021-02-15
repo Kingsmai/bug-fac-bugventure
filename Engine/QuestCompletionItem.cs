@@ -5,9 +5,7 @@
 	/// </summary>
 	public class QuestCompletionItem
 	{
-		// 物品详情
 		public Item Details { get; set; }
-		// 物品数量
 		public int Quantity { get; set; }
 
 		/// <summary>

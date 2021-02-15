@@ -7,8 +7,9 @@ namespace Engine
 	/// </summary>
 	public class InventoryItem : INotifyPropertyChanged
 	{
-		// 物品详情
 		private Item _details;
+		private int _quantity;
+
 		public Item Details
 		{
 			get { return _details; }
@@ -18,8 +19,7 @@ namespace Engine
 				OnPropertyChanged("Details");
 			}
 		}
-		// 物品数量
-		private int _quantity;
+
 		public int Quantity
 		{
 			get { return _quantity; }
@@ -30,17 +30,18 @@ namespace Engine
 				OnPropertyChanged("Description");
 			}
 		}
+
+		public int ItemID
+		{
+			get { return Details.ID; }
+		}
+
 		// 物品简介，获取物品名称（因为UI绑定时，不能通过Details.Name访问物品名）
 		public string Description
 		{
 			get { return Quantity > 1 ? Details.NamePlural : Details.Name; }
 		}
-		// 【只读】获取物品ID
-		public int ItemID
-		{
-			get { return Details.ID; }
-		}
-		// 【只读】获取物品价格
+
 		public int Price
 		{
 			get { return Details.Price; }
