@@ -12,6 +12,8 @@
 		public Item ItemRequiredToEnter { get; set; }
 		// 这个场景的任务
 		public Quest QuestAvailableHere { get; set; }
+		// 这个场景有没有任务
+		public bool HasAQuest { get { return QuestAvailableHere != null; } }
 		// 在这个场景的生物
 		public Monster MonsterLivingHere { get; set; }
 		// 在这个场景的商贩

@@ -493,7 +493,7 @@ namespace Engine
 			CurrentHitPoints = MaximumHitPoints;
 
 			// 当前地点是否有任务
-			if (newLocation.QuestAvailableHere != null)
+			if (newLocation.HasAQuest)
 			{
 				// 检查玩家是否拥有任务
 				bool playerAlreadyHasQuest = HasThisQuest(newLocation.QuestAvailableHere);
