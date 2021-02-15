@@ -35,7 +35,7 @@ namespace BugVentureConsole
 				// 等待用户输入并按下<Enter>。
 				string userInput = Console.ReadLine();
 
-				if (string.IsNullOrWhiteSpace(userInput))
+				if (userInput == null)
 				{
 					continue;
 				}
@@ -83,31 +83,11 @@ namespace BugVentureConsole
 		{
 			if (input.Contains("help") || input == "?")
 			{
-				Console.WriteLine("Available commands");
-				Console.WriteLine("====================================");
-				Console.WriteLine("Stats - Display player information");
-				Console.WriteLine("Look - Get the description of your location");
-				Console.WriteLine("Inventory - Display your inventory");
-				Console.WriteLine("Quests - Display your quests");
-				Console.WriteLine("Attack - Fight the monster");
-				Console.WriteLine("Equip <weapon name> - Set your current weapon");
-				Console.WriteLine("Drink <potion name> - Drink a potion");
-				Console.WriteLine("Trade - display your inventory and vendor's inventory");
-				Console.WriteLine("Buy <item name> - Buy an item from a vendor");
-				Console.WriteLine("Sell <item name> - Sell an item to a vendor");
-				Console.WriteLine("North - Move North");
-				Console.WriteLine("South - Move South");
-				Console.WriteLine("East - Move East");
-				Console.WriteLine("West - Move West");
-				Console.WriteLine("Exit - Save the game and exit");
+				DisplayHelpText();
 			}
 			else if (input == "stats")
 			{
-				Console.WriteLine("Current hit points: {0}", _player.CurrentHitPoints);
-				Console.WriteLine("Maximum hit points: {0}", _player.MaximumHitPoints);
-				Console.WriteLine("Experience Points: {0}", _player.ExperiencePoints);
-				Console.WriteLine("Level: {0}", _player.Level);
-				Console.WriteLine("Gold: {0}", _player.Gold);
+				DisplayPlayerStats();
 			}
 			else if (input == "look")
 			{
@@ -180,192 +160,27 @@ namespace BugVentureConsole
 			}
 			else if (input.Contains("attack"))
 			{
-				if (_player.CurrentLocation.MonsterLivingHere == null)
-				{
-					Console.WriteLine("There is nothing here to attack");
-				}
-				else
-				{
-					if (_player.CurrentWeapon == null)
-					{
-						// 选择玩家第一个武器（如果没有武器，则返回null）
-						_player.CurrentWeapon = _player.Weapons.FirstOrDefault();
-					}
-
-					if (_player.CurrentWeapon == null)
-					{
-						Console.WriteLine("You don't have any weapons");
-					}
-					else
-					{
-						_player.UseWeapon(_player.CurrentWeapon);
-					}
-				}
+				AttackMonster();
 			}
 			else if (input.StartsWith("equip "))
 			{
-				string inputWeaponName = input.Substring(6).Trim();
-
-				if (string.IsNullOrEmpty(inputWeaponName))
-				{
-					Console.WriteLine("You must enter the name of the weapon to equip");
-				}
-				else
-				{
-					Weapon weaponToEquip = _player.Weapons.SingleOrDefault(x => x.Name.ToLower() == inputWeaponName || x.NamePlural == inputWeaponName);
-
-					if (weaponToEquip == null)
-					{
-						Console.WriteLine("You do not have the weapon: {0}", inputWeaponName);
-					}
-					else
-					{
-						_player.CurrentWeapon = weaponToEquip;
-
-						Console.WriteLine("You equip your {0}", _player.CurrentWeapon.Name);
-					}
-				}
+				EquipWeapon(input);
 			}
 			else if (input.StartsWith("drink "))
 			{
-				string inputPotionName = input.Substring(6).Trim();
-
-				if (string.IsNullOrEmpty(inputPotionName))
-				{
-					Console.WriteLine("You must enter the name of the potion to drink");
-				}
-				else
-				{
-					HealingPotion potionToDrink = _player.Potions.SingleOrDefault(x => x.Name.ToLower() == inputPotionName || x.NamePlural.ToLower() == inputPotionName);
-
-					if (potionToDrink == null)
-					{
-						Console.WriteLine("You do not have the potion: {0}", inputPotionName);
-					}
-					else
-					{
-						_player.UsePotion(potionToDrink);
-					}
-				}
+				DrinkPotion(input);
 			}
 			else if (input == "trade")
 			{
-				if (_player.CurrentLocation.VendorWorkingHere == null)
-				{
-					Console.WriteLine("There is no vendor here");
-				}
-				else
-				{
-					Console.WriteLine("PLAYER INVENTORY");
-					Console.WriteLine("================");
-
-					if (_player.Inventory.Count(x => x.Price != World.UNSELLABLE_ITEM_PRICE) == 0)
-					{
-						Console.WriteLine("You do not have any inventory");
-					}
-					else
-					{
-						foreach (InventoryItem inventoryItem in _player.Inventory.Where(x => x.Price != World.UNSELLABLE_ITEM_PRICE))
-						{
-							Console.WriteLine("{0} {1} Price: {2}", inventoryItem.Quantity, inventoryItem.Description, inventoryItem.Price);
-						}
-					}
-
-					Console.WriteLine("");
-
-					Console.WriteLine("VENDOR INVENTORY");
-					Console.WriteLine("================");
-
-					if (_player.CurrentLocation.VendorWorkingHere.Inventory.Count == 0)
-					{
-						Console.WriteLine("The vendor does not have any inventory");
-					}
-					else
-					{
-						foreach (InventoryItem inventoryItem in _player.CurrentLocation.VendorWorkingHere.Inventory)
-						{
-							Console.WriteLine("{0} {1} Price: {2}", inventoryItem.Quantity, inventoryItem.Description, inventoryItem.Price);
-						}
-					}
-				}
+				ViewTradeInventory();
 			}
 			else if (input.StartsWith("buy "))
 			{
-				if (_player.CurrentLocation.VendorWorkingHere == null)
-				{
-					Console.WriteLine("There is no vendor at this location");
-				}
-				else
-				{
-					string itemName = input.Substring(4).Trim();
-
-					if (string.IsNullOrEmpty(itemName))
-					{
-						Console.WriteLine("You must enter the name of the item to buy");
-					}
-					else
-					{
-						// 从商家物品栏获取道具
-						InventoryItem itemToBuy = _player.CurrentLocation.VendorWorkingHere.Inventory.SingleOrDefault(x => x.Details.Name.ToLower() == itemName);
-
-						// 检查商家是否拥有该物品
-						if (itemToBuy == null)
-						{
-							Console.WriteLine("The vendor does not have any {0}", itemName);
-						}
-						else
-						{
-							// 检查玩家是否拥有足够的金钱购买
-							if (_player.Gold < itemToBuy.Price)
-							{
-								Console.WriteLine("You do not have enough gold to buy a {0}", itemToBuy.Description);
-							}
-							else
-							{
-								// 成功购买商品
-								_player.AddItemToInventory(itemToBuy.Details);
-								_player.Gold -= itemToBuy.Price;
-
-								Console.WriteLine("You bought one {0} for {1} gold", itemToBuy.Details.Name, itemToBuy.Price);
-							}
-						}
-					}
-				}
+				BuyItem(input);
 			}
 			else if (input.StartsWith("sell "))
 			{
-				if (_player.CurrentLocation.VendorWorkingHere == null)
-				{
-					Console.WriteLine("There is no vendor at this location");
-				}
-				else
-				{
-					string itemName = input.Substring(5).Trim();
-
-					if (string.IsNullOrEmpty(itemName))
-					{
-						Console.WriteLine("You must enter the name of the item to sell");
-					}
-					else
-					{
-						// 获取玩家物品栏里的物品
-						InventoryItem itemToSell = _player.Inventory.SingleOrDefault(x => x.Details.Name.ToLower() == itemName && x.Quantity > 0 && x.Price != World.UNSELLABLE_ITEM_PRICE);
-
-						// 检查玩家是否有该道具
-						if (itemToSell == null)
-						{
-							Console.WriteLine("The player cannot sell any {0}", itemName);
-						}
-						else
-						{
-							// 卖出物品
-							_player.RemoveItemFromInventory(itemToSell.Details, 1);
-							_player.Gold += itemToSell.Price;
-
-							Console.WriteLine("You receive {0} gold for your {1}", itemToSell.Price, itemToSell.Details.Name);
-						}
-					}
-				}
+				SellItem(input);
 			}
 			else
 			{
@@ -375,6 +190,231 @@ namespace BugVentureConsole
 
 			// 空一行，让UI看上去更干净一些
 			Console.WriteLine("");
+		}
+
+		private static void SellItem(string input)
+		{
+			if (_player.CurrentLocation.VendorWorkingHere == null)
+			{
+				Console.WriteLine("There is no vendor at this location");
+			}
+			else
+			{
+				string itemName = input.Substring(5).Trim();
+
+				if (string.IsNullOrEmpty(itemName))
+				{
+					Console.WriteLine("You must enter the name of the item to sell");
+				}
+				else
+				{
+					// 获取玩家物品栏里的物品
+					InventoryItem itemToSell = _player.Inventory.SingleOrDefault(x => x.Details.Name.ToLower() == itemName && x.Quantity > 0 && x.Price != World.UNSELLABLE_ITEM_PRICE);
+
+					// 检查玩家是否有该道具
+					if (itemToSell == null)
+					{
+						Console.WriteLine("The player cannot sell any {0}", itemName);
+					}
+					else
+					{
+						// 卖出物品
+						_player.RemoveItemFromInventory(itemToSell.Details, 1);
+						_player.Gold += itemToSell.Price;
+
+						Console.WriteLine("You receive {0} gold for your {1}", itemToSell.Price, itemToSell.Details.Name);
+					}
+				}
+			}
+		}
+
+		private static void BuyItem(string input)
+		{
+			if (_player.CurrentLocation.VendorWorkingHere == null)
+			{
+				Console.WriteLine("There is no vendor at this location");
+			}
+			else
+			{
+				string itemName = input.Substring(4).Trim();
+
+				if (string.IsNullOrEmpty(itemName))
+				{
+					Console.WriteLine("You must enter the name of the item to buy");
+				}
+				else
+				{
+					// 从商家物品栏获取道具
+					InventoryItem itemToBuy = _player.CurrentLocation.VendorWorkingHere.Inventory.SingleOrDefault(x => x.Details.Name.ToLower() == itemName);
+
+					// 检查商家是否拥有该物品
+					if (itemToBuy == null)
+					{
+						Console.WriteLine("The vendor does not have any {0}", itemName);
+					}
+					else
+					{
+						// 检查玩家是否拥有足够的金钱购买
+						if (_player.Gold < itemToBuy.Price)
+						{
+							Console.WriteLine("You do not have enough gold to buy a {0}", itemToBuy.Description);
+						}
+						else
+						{
+							// 成功购买商品
+							_player.AddItemToInventory(itemToBuy.Details);
+							_player.Gold -= itemToBuy.Price;
+
+							Console.WriteLine("You bought one {0} for {1} gold", itemToBuy.Details.Name, itemToBuy.Price);
+						}
+					}
+				}
+			}
+		}
+
+		private static void ViewTradeInventory()
+		{
+			if (_player.CurrentLocation.VendorWorkingHere == null)
+			{
+				Console.WriteLine("There is no vendor here");
+			}
+			else
+			{
+				Console.WriteLine("PLAYER INVENTORY");
+				Console.WriteLine("================");
+
+				if (_player.Inventory.Count(x => x.Price != World.UNSELLABLE_ITEM_PRICE) == 0)
+				{
+					Console.WriteLine("You do not have any inventory");
+				}
+				else
+				{
+					foreach (InventoryItem inventoryItem in _player.Inventory.Where(x => x.Price != World.UNSELLABLE_ITEM_PRICE))
+					{
+						Console.WriteLine("{0} {1} Price: {2}", inventoryItem.Quantity, inventoryItem.Description, inventoryItem.Price);
+					}
+				}
+
+				Console.WriteLine("");
+
+				Console.WriteLine("VENDOR INVENTORY");
+				Console.WriteLine("================");
+
+				if (_player.CurrentLocation.VendorWorkingHere.Inventory.Count == 0)
+				{
+					Console.WriteLine("The vendor does not have any inventory");
+				}
+				else
+				{
+					foreach (InventoryItem inventoryItem in _player.CurrentLocation.VendorWorkingHere.Inventory)
+					{
+						Console.WriteLine("{0} {1} Price: {2}", inventoryItem.Quantity, inventoryItem.Description, inventoryItem.Price);
+					}
+				}
+			}
+		}
+
+		private static void DrinkPotion(string input)
+		{
+			string inputPotionName = input.Substring(6).Trim();
+
+			if (string.IsNullOrEmpty(inputPotionName))
+			{
+				Console.WriteLine("You must enter the name of the potion to drink");
+			}
+			else
+			{
+				HealingPotion potionToDrink = _player.Potions.SingleOrDefault(x => x.Name.ToLower() == inputPotionName || x.NamePlural.ToLower() == inputPotionName);
+
+				if (potionToDrink == null)
+				{
+					Console.WriteLine("You do not have the potion: {0}", inputPotionName);
+				}
+				else
+				{
+					_player.UsePotion(potionToDrink);
+				}
+			}
+		}
+
+		private static void EquipWeapon(string input)
+		{
+			string inputWeaponName = input.Substring(6).Trim();
+
+			if (string.IsNullOrEmpty(inputWeaponName))
+			{
+				Console.WriteLine("You must enter the name of the weapon to equip");
+			}
+			else
+			{
+				Weapon weaponToEquip = _player.Weapons.SingleOrDefault(x => x.Name.ToLower() == inputWeaponName || x.NamePlural.ToLower() == inputWeaponName);
+
+				if (weaponToEquip == null)
+				{
+					Console.WriteLine("You do not have the weapon: {0}", inputWeaponName);
+				}
+				else
+				{
+					_player.CurrentWeapon = weaponToEquip;
+
+					Console.WriteLine("You equip your {0}", _player.CurrentWeapon.Name);
+				}
+			}
+		}
+
+		private static void AttackMonster()
+		{
+			if (_player.CurrentLocation.MonsterLivingHere == null)
+			{
+				Console.WriteLine("There is nothing here to attack");
+			}
+			else
+			{
+				if (_player.CurrentWeapon == null)
+				{
+					// 选择玩家第一个武器（如果没有武器，则返回null）
+					_player.CurrentWeapon = _player.Weapons.FirstOrDefault();
+				}
+
+				if (_player.CurrentWeapon == null)
+				{
+					Console.WriteLine("You don't have any weapons");
+				}
+				else
+				{
+					_player.UseWeapon(_player.CurrentWeapon);
+				}
+			}
+		}
+
+		private static void DisplayPlayerStats()
+		{
+			Console.WriteLine("Current hit points: {0}", _player.CurrentHitPoints);
+			Console.WriteLine("Maximum hit points: {0}", _player.MaximumHitPoints);
+			Console.WriteLine("Experience Points: {0}", _player.ExperiencePoints);
+			Console.WriteLine("Level: {0}", _player.Level);
+			Console.WriteLine("Gold: {0}", _player.Gold);
+		}
+
+		private static void DisplayHelpText()
+		{
+			Console.WriteLine("Available commands");
+			Console.WriteLine("====================================");
+			Console.WriteLine("Stats - Display player information");
+			Console.WriteLine("Look - Get the description of your location");
+			Console.WriteLine("Inventory - Display your inventory");
+			Console.WriteLine("Quests - Display your quests");
+			Console.WriteLine("Attack - Fight the monster");
+			Console.WriteLine("Equip <weapon name> - Set your current weapon");
+			Console.WriteLine("Drink <potion name> - Drink a potion");
+			Console.WriteLine("Trade - display your inventory and vendor's inventory");
+			Console.WriteLine("Buy <item name> - Buy an item from a vendor");
+			Console.WriteLine("Sell <item name> - Sell an item to a vendor");
+			Console.WriteLine("North - Move North");
+			Console.WriteLine("South - Move South");
+			Console.WriteLine("East - Move East");
+			Console.WriteLine("West - Move West");
+			Console.WriteLine("Exit - Save the game and exit");
 		}
 
 		private static void DisplayCurrentLocation()

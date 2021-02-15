@@ -174,6 +174,7 @@ namespace BugVenture
 				btnEast.Visible = (_player.CurrentLocation.LocationToEast != null);
 				btnSouth.Visible = (_player.CurrentLocation.LocationToSouth != null);
 				btnWest.Visible = (_player.CurrentLocation.LocationToWest != null);
+				btnTrade.Visible = (_player.CurrentLocation.VendorWorkingHere != null);
 
 				// 显示当前位置信息
 				rtbLocation.Text = _player.CurrentLocation.Name + Environment.NewLine;
@@ -194,9 +195,6 @@ namespace BugVenture
 					btnUseWeapon.Visible = _player.Weapons.Any();
 					btnUsePotion.Visible = _player.Potions.Any();
 				}
-
-				// 检查是否有商贩，是否需要显示trade按钮
-				btnTrade.Visible = (_player.CurrentLocation.VendorWorkingHere != null);
 			}
 		}
 

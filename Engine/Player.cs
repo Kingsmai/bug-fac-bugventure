@@ -8,8 +8,18 @@ namespace Engine
 {
 	public class Player : LivingCreature
 	{
-		// 金币
 		private int _gold;
+		private int _experiencePoints;
+		private Location _currentLocation;
+
+		/// <summary>
+		/// UI事件监听handler
+		/// <para>The EventHandler<MessageEventArgs> signifies that the Player class will send an event
+		/// notification with a MessageEventArgs object – the object with the message text we want to
+		/// display.</para>
+		/// </summary>
+		public event EventHandler<MessageEventArgs> OnMessage;
+
 		public int Gold
 		{
 			get { return _gold; }
@@ -19,8 +29,7 @@ namespace Engine
 				OnPropertyChanged("Gold");
 			}
 		}
-		// 经验值
-		private int _experiencePoints;
+
 		public int ExperiencePoints
 		{
 			get { return _experiencePoints; }
@@ -31,33 +40,13 @@ namespace Engine
 				OnPropertyChanged("Level"); // 我们没有set等级的值，它的值是被计算的，所以根据经验值直接发出通知就行
 			}
 		}
-		// 等级
+
 		public int Level
 		{
-			// 每一次获取Level的值时，都会计算
-			// 因为时整数型，会向下取整，所以需要+1
-			get { return ((ExperiencePoints / 100) + 1); }
-			// 我们不需要手动修改等级，所以把set删掉了。
+			// 每一次获取Level的值时，都会计算；因为是整数型，会向下取整，所以需要+1
+			get { return (ExperiencePoints / 100) + 1; }
 		}
-		// 物品栏
-		// To bind a list property, you need to change its datatype to either BindingList or
-		// ObservableCollection.BindingList gives more options than ObservableCollection – like searching and sorting.
-		public BindingList<InventoryItem> Inventory { get; set; }
-		// 当前任务
-		public BindingList<PlayerQuest> Quests { get; set; }
-		// 当前拥有武器列表
-		public List<Weapon> Weapons
-		{
-			// 如果列表元素是武器类，则把该对象转成新的list（我们只需要InventoryItems的Details属性，不需要Quantity属性）
-			get { return Inventory.Where(x => x.Details is Weapon).Select(x => x.Details as Weapon).ToList(); }
-		}
-		// 当前拥有药水列表
-		public List<HealingPotion> Potions
-		{
-			get { return Inventory.Where(x => x.Details is HealingPotion).Select(x => x.Details as HealingPotion).ToList(); }
-		}
-		// 当前位置
-		private Location _currentLocation;
+
 		public Location CurrentLocation
 		{
 			get { return _currentLocation; }
@@ -67,18 +56,26 @@ namespace Engine
 				OnPropertyChanged("CurrentLocation");
 			}
 		}
-		// 当前使用武器
-		public Weapon CurrentWeapon { get; set; }
-		// 当前面对的怪物
-		private Monster _currentMonster;
 
-		/// <summary>
-		/// 玩家对象
-		/// </summary>
-		/// <param name="currentHitPoints">当前生命值</param>
-		/// <param name="maximumHitPoints">最大生命值</param>
-		/// <param name="gold">当前拥有金币</param>
-		/// <param name="experiencePoints">经验值</param>
+		public Weapon CurrentWeapon { get; set; }
+
+		// To bind a list property, you need to change its datatype to either BindingList or
+		// ObservableCollection.BindingList gives more options than ObservableCollection – like searching and sorting.
+		public BindingList<InventoryItem> Inventory { get; set; }
+		public BindingList<PlayerQuest> Quests { get; set; }
+
+		public List<Weapon> Weapons
+		{
+			// 如果列表元素是武器类，则把该对象转成新的list（只需要InventoryItems的Details属性，不需要Quantity属性）
+			get { return Inventory.Where(x => x.Details is Weapon).Select(x => x.Details as Weapon).ToList(); }
+		}
+		public List<HealingPotion> Potions
+		{
+			get { return Inventory.Where(x => x.Details is HealingPotion).Select(x => x.Details as HealingPotion).ToList(); }
+		}
+
+		private Monster CurrentMonster { get; set; }
+
 		private Player(int currentHitPoints, int maximumHitPoints, int gold, int experiencePoints)
 			: base(currentHitPoints, maximumHitPoints)
 		{
@@ -96,9 +93,7 @@ namespace Engine
 		public static Player CreateDefaultPlayer()
 		{
 			Player player = new Player(10, 10, 20, 0);
-			// 初始道具（锈剑）
 			player.Inventory.Add(new InventoryItem(World.ItemByID(World.ITEM_ID_RUSTY_SWORD), 1));
-			// 初始地点（家）
 			player.CurrentLocation = World.LocationByID(World.LOCATION_ID_HOME);
 
 			return player;
@@ -121,23 +116,12 @@ namespace Engine
 		/// <param name="quantity">需要移除的数量</param>
 		public void RemoveItemFromInventory(Item itemToRemove, int quantity = 1)
 		{
-			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToRemove.ID);
+			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToRemove.ID && ii.Quantity > quantity);
 
-			if (item == null)
-			{
-				// 该道具没有出现在玩家的物品栏里
-				// 可能需要根据此情况给出报错信息
-			}
-			else
+			if (item != null)
 			{
 				// 该道具有在玩家物品栏里，所以需要减少数量
 				item.Quantity -= quantity;
-
-				// 确保我们得到的值不会变成负数
-				if (item.Quantity < 0)
-				{
-					item.Quantity = 0;
-				}
 
 				// 当物品数量 = 0，则在物品栏里删除该物品
 				if (item.Quantity == 0)
@@ -157,9 +141,9 @@ namespace Engine
 		/// <param name="quantity">增加道具的数量</param>
 		public void AddItemToInventory(Item itemToAdd, int quantity = 1)
 		{
-			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToAdd.ID);
+			InventoryItem existingItemInInventory = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToAdd.ID);
 
-			if (item == null)
+			if (existingItemInInventory == null)
 			{
 				// 物品栏里没有这个道具，所以增加新的
 				Inventory.Add(new InventoryItem(itemToAdd, quantity));
@@ -167,7 +151,7 @@ namespace Engine
 			else
 			{
 				// 物品栏里有这个道具，所以添加数量
-				item.Quantity += quantity;
+				existingItemInInventory.Quantity += quantity;
 			}
 			RaiseInventoryChangedEvent(itemToAdd);
 		}
@@ -229,8 +213,7 @@ namespace Engine
 			catch
 			{
 				// 如果xml文件有问题，则创建新的角色
-				return Player.CreateDefaultPlayer();
-				throw;
+				return CreateDefaultPlayer();
 			}
 		}
 
@@ -319,7 +302,7 @@ namespace Engine
 		/// 删除玩家任务栏里的任务道具
 		/// </summary>
 		/// <param name="quest">执行的任务</param>
-		public void RemoveQuestCompletetionItems(Quest quest)
+		public void RemoveQuestCompletionItems(Quest quest)
 		{
 			foreach (QuestCompletionItem qci in quest.QuestCompletionItems)
 			{
@@ -385,31 +368,15 @@ namespace Engine
 			player.AppendChild(stats);
 
 			// 在"Stats"节点中创建子节点
-			XmlNode currentHitPoints = playerData.CreateElement("CurrentHitPoints");
-			currentHitPoints.AppendChild(playerData.CreateTextNode(this.CurrentHitPoints.ToString()));
-			stats.AppendChild(currentHitPoints);
-
-			XmlNode maximumHitPoints = playerData.CreateElement("MaximumHitPoints");
-			maximumHitPoints.AppendChild(playerData.CreateTextNode(this.MaximumHitPoints.ToString()));
-			stats.AppendChild(maximumHitPoints);
-
-			XmlNode gold = playerData.CreateElement("Gold");
-			gold.AppendChild(playerData.CreateTextNode(this.Gold.ToString()));
-			stats.AppendChild(gold);
-
-			XmlNode experiencePoints = playerData.CreateElement("ExperiencePoints");
-			experiencePoints.AppendChild(playerData.CreateTextNode(this.ExperiencePoints.ToString()));
-			stats.AppendChild(experiencePoints);
-
-			XmlNode currentLocation = playerData.CreateElement("CurrentLocation");
-			currentLocation.AppendChild(playerData.CreateTextNode(this.CurrentLocation.ID.ToString()));
-			stats.AppendChild(currentLocation);
+			CreateNewChildXmlNode(playerData, stats, "CurrentHitPoints", CurrentHitPoints);
+            CreateNewChildXmlNode(playerData, stats, "MaximumHitPoints", MaximumHitPoints);
+            CreateNewChildXmlNode(playerData, stats, "Gold", Gold);
+            CreateNewChildXmlNode(playerData, stats, "ExperiencePoints", ExperiencePoints);
+            CreateNewChildXmlNode(playerData, stats, "CurrentLocation", CurrentLocation.ID);
 
 			if (CurrentWeapon != null)
 			{
-				XmlNode currentWeapon = playerData.CreateElement("CurrentWeapon");
-				currentWeapon.AppendChild(playerData.CreateTextNode(this.CurrentWeapon.ID.ToString()));
-				stats.AppendChild(currentWeapon);
+				CreateNewChildXmlNode(playerData, stats, "CurrentWeapon", CurrentWeapon.ID);
 			}
 
 			// 保存物品栏
@@ -421,13 +388,8 @@ namespace Engine
 			{
 				XmlNode inventoryItem = playerData.CreateElement("InventoryItem");
 
-				XmlAttribute idAttribute = playerData.CreateAttribute("ID");
-				idAttribute.Value = item.Details.ID.ToString();
-				inventoryItem.Attributes.Append(idAttribute);
-
-				XmlAttribute quantityAttribute = playerData.CreateAttribute("Quantity");
-				quantityAttribute.Value = item.Quantity.ToString();
-				inventoryItem.Attributes.Append(quantityAttribute);
+				AddXmlAttributeToNode(playerData, inventoryItem, "ID", item.Details.ID);
+				AddXmlAttributeToNode(playerData, inventoryItem, "Quantity", item.Quantity);
 
 				inventoryItems.AppendChild(inventoryItem);
 			}
@@ -441,19 +403,28 @@ namespace Engine
 			{
 				XmlNode playerQuest = playerData.CreateElement("PlayerQuest");
 
-				XmlAttribute idAttribute = playerData.CreateAttribute("ID");
-				idAttribute.Value = quest.Details.ID.ToString();
-				playerQuest.Attributes.Append(idAttribute);
-
-				XmlAttribute isCompletedAttribute = playerData.CreateAttribute("IsCompleted");
-				isCompletedAttribute.Value = quest.IsCompleted.ToString();
-				playerQuest.Attributes.Append(isCompletedAttribute);
+				AddXmlAttributeToNode(playerData, playerQuest, "ID", quest.Details.ID);
+				AddXmlAttributeToNode(playerData, playerQuest, "IsCompleted", quest.IsCompleted);
 
 				playerQuests.AppendChild(playerQuest);
 			}
 
 			//playerData.Save("pretty-save.xml");
 			return playerData.InnerXml; // XML文档，字符串，可以保存到文件
+		}
+
+		private void CreateNewChildXmlNode(XmlDocument document, XmlNode parentNode, string elementName, object value)
+		{
+			XmlNode node = document.CreateElement(elementName);
+			node.AppendChild(document.CreateTextNode(value.ToString()));
+			parentNode.AppendChild(node);
+		}
+
+		private void AddXmlAttributeToNode(XmlDocument document, XmlNode node, string attributeName, object value)
+		{
+			XmlAttribute attribute = document.CreateAttribute(attributeName);
+			attribute.Value = value.ToString();
+			node.Attributes.Append(attribute);
 		}
 
 		/// <summary>
@@ -475,118 +446,38 @@ namespace Engine
 		/// <summary>
 		/// 移动到新的地图
 		/// </summary>
-		/// <param name="newLocation">新的目的地</param>
-		public void MoveTo(Location newLocation)
+		/// <param name="location">新的目的地</param>
+		public void MoveTo(Location location)
 		{
-			// 如果玩家没有进入该场景的道具
-			if (!HasRequiredItemToEnterThisLocation(newLocation))
+			if (PlayerDoesNotHaveTheRequiredItemToEnter(location))
 			{
-				// 显示信息
-				RaiseMessage("You must have a " + newLocation.ItemRequiredToEnter.Name + " to enter this location.");
-				return; // 结束事件操作（不让玩家进入）
+				RaiseMessage("You must have a " + location.ItemRequiredToEnter.Name + " to enter this location.");
+				return;
 			}
 
-			// 更新玩家当前位置
-			CurrentLocation = newLocation;
+			// The player can enter this location
+			CurrentLocation = location;
 
-			// 完全恢复角色
-			CurrentHitPoints = MaximumHitPoints;
+			CompletelyHeal();
 
-			// 当前地点是否有任务
-			if (newLocation.HasAQuest)
+			// 当前地点有任务
+			if (location.HasAQuest)
 			{
-				// 检查玩家是否拥有任务
-				bool playerAlreadyHasQuest = HasThisQuest(newLocation.QuestAvailableHere);
-				// 检查玩家是否已经完成任务
-				bool playerAlreadyCompletedQuest = CompletedThisQuest(newLocation.QuestAvailableHere);
-
-				// 遍历结束后，如果玩家已经拥有这个任务
-				if (playerAlreadyHasQuest)
+				// 检查玩家没有这个任务
+				if (PlayerDoesNotHaveThisQuest(location.QuestAvailableHere))
 				{
-					// 如果玩家还没完成这项任务
-					if (!playerAlreadyCompletedQuest)
+					GiveQuestToPlayer(location.QuestAvailableHere);
+				}
+				else
+				{
+					if (PlayerHasNotCompleted(location.QuestAvailableHere) && PlayerHasAllQuestCompletionItemsFor(location.QuestAvailableHere))
 					{
-						// 如果玩家拥有所有的任务道具
-						bool playerHasAllItemsToCompleteQuest = HasAllQuestCompletionItems(newLocation.QuestAvailableHere);
-
-						// 当玩家拥有通关任务所需要的道具
-						if (playerHasAllItemsToCompleteQuest)
-						{
-							// 显示信息
-							RaiseMessage("");
-							RaiseMessage("You complete the " + newLocation.QuestAvailableHere.Name + " quest.");
-
-							// 删除玩家任务栏里的任务道具
-							RemoveQuestCompletetionItems(newLocation.QuestAvailableHere);
-
-							// 给予任务奖励道具，并显示信息
-							RaiseMessage("You receive: ");
-							RaiseMessage(newLocation.QuestAvailableHere.RewardExperiencePoints.ToString() + " experience points");
-							RaiseMessage(newLocation.QuestAvailableHere.RewardGold.ToString() + " gold");
-							RaiseMessage(newLocation.QuestAvailableHere.RewardItem.Name);
-							RaiseMessage("");
-
-							AddExperiencePoints(newLocation.QuestAvailableHere.RewardExperiencePoints);
-							Gold += newLocation.QuestAvailableHere.RewardGold;
-
-							// 添加奖励道具到玩家任务栏
-							AddItemToInventory(newLocation.QuestAvailableHere.RewardItem);
-
-							// 标记该任务已经被完成
-							MarkQuestCompleted(newLocation.QuestAvailableHere);
-						}
+						GivePlayerQuestRewards(location.QuestAvailableHere);
 					}
 				}
-				else // 如果玩家没有这个任务
-				{
-					// 显示信息
-					RaiseMessage("You received the " + newLocation.QuestAvailableHere.Name + " quest.");
-					RaiseMessage(newLocation.QuestAvailableHere.Description);
-					RaiseMessage("To complete it, return with: ");
-					foreach (QuestCompletionItem questCompletionItem in newLocation.QuestAvailableHere.QuestCompletionItems)
-					{
-						if (questCompletionItem.Quantity == 1)
-						{
-							RaiseMessage(questCompletionItem.Quantity + " " + questCompletionItem.Details.Name);
-						}
-						else
-						{
-							RaiseMessage(questCompletionItem.Quantity.ToString() + " " + questCompletionItem.Details.NamePlural);
-						}
-					}
-					RaiseMessage("");
-
-					// 将任务添加到玩家人物列表里
-					Quests.Add(new PlayerQuest(newLocation.QuestAvailableHere));
-				}
 			}
 
-			// 检查该地点是否有怪物存在
-			if (newLocation.MonsterLivingHere != null)
-			{
-				// 有怪物
-				RaiseMessage("You see a " + newLocation.MonsterLivingHere.Name);
-				// 用World类的值创建新的怪物对象
-				Monster standardMonster = World.MonsterByID(newLocation.MonsterLivingHere.ID);
-
-				_currentMonster = new Monster(
-					standardMonster.ID,
-					standardMonster.Name,
-					standardMonster.MaximumDamage,
-					standardMonster.RewardExperiencePoints,
-					standardMonster.RewardGold,
-					standardMonster.CurrentHitPoints,
-					standardMonster.MaximumHitPoints);
-
-				foreach (LootItem lootItem in standardMonster.LootTable)
-				{
-					_currentMonster.LootTable.Add(lootItem);
-				}
-			}
-			else
-			{
-				_currentMonster = null;
-			}
+			SetTheCurrentMonsterForTheCurrentLocation(location);
 		}
 
 		public void MoveNorth()
@@ -629,144 +520,175 @@ namespace Engine
 		public void UseWeapon(Weapon weapon)
 		{
 			// 确定对怪物造成的伤害量
-			int damageToMonster = RandomNumberGenerator.NumberBetween(
-				weapon.MinimumDamage,
-				weapon.MaximumDamage);
+			int damageToMonster = RandomNumberGenerator.NumberBetween(weapon.MinimumDamage, weapon.MaximumDamage);
 
-			// 对怪物造成伤害
-			_currentMonster.CurrentHitPoints -= damageToMonster;
-
-			// 显示信息
-			RaiseMessage("You hit the " + _currentMonster.Name + " for " + damageToMonster + " points.");
-
-			// 检查怪物是否死亡
-			if (_currentMonster.CurrentHitPoints <= 0)
+			if (damageToMonster == 0)
 			{
-				// 怪物死了
-				RaiseMessage("");
-				RaiseMessage("You defeated the " + _currentMonster.Name);
-
-				// 奖励经验值
-				AddExperiencePoints(_currentMonster.RewardExperiencePoints);
-				RaiseMessage("You receive " + _currentMonster.RewardExperiencePoints.ToString() + " experience points.");
-
-				// 奖励金币
-				Gold += _currentMonster.RewardGold;
-				RaiseMessage("You receive " + _currentMonster.RewardGold.ToString() + " gold.");
-
-				// 获取随机掉落物
-				List<InventoryItem> lootedItems = new List<InventoryItem>();
-
-				// 添加道具到lootedItems列表里，根据掉落率比较一个随机值
-				foreach (LootItem lootItem in _currentMonster.LootTable)
-				{
-					if (RandomNumberGenerator.NumberBetween(1, 100) <= lootItem.DropPercentage)
-					{
-						lootedItems.Add(new InventoryItem(lootItem.Details, 1));
-					}
-				}
-				// 如果没有道具被随机选中，那么增加默认道具
-				if (lootedItems.Count == 0)
-				{
-					foreach (LootItem lootItem in _currentMonster.LootTable)
-					{
-						if (lootItem.IsDefaultItem)
-						{
-							lootedItems.Add(new InventoryItem(lootItem.Details, 1));
-						}
-					}
-				}
-				// 将掉落物添加到玩家道具栏里。
-				foreach (InventoryItem inventoryItem in lootedItems)
-				{
-					AddItemToInventory(inventoryItem.Details);
-
-					if (inventoryItem.Quantity == 1)
-					{
-						RaiseMessage("You loot " + inventoryItem.Quantity.ToString() + " " + inventoryItem.Details.Name);
-					}
-					else
-					{
-						RaiseMessage("You loot " + inventoryItem.Quantity.ToString() + " " + inventoryItem.Details.NamePlural);
-					}
-				}
-
-				// 在信息框中添加一行空行，美观
-				RaiseMessage("");
-
-				// 移动玩家到当前位置（用于刷新玩家、更新新的怪物）
-				MoveTo(CurrentLocation);
+				RaiseMessage("You missed the " + CurrentMonster.Name);
 			}
 			else
 			{
-				// 怪物仍然活着，轮到怪物回合
-				// 计算怪物对玩家造成的伤害
-				int damageToPlayer = RandomNumberGenerator.NumberBetween(0, _currentMonster.MaximumDamage);
-
-				// 显示信息
-				RaiseMessage("The " + _currentMonster.Name + " did " + damageToPlayer + " points of damage.");
-
-				// 扣去玩家生命值
-				CurrentHitPoints -= damageToPlayer;
-
-				// 检查玩家是否死亡
-				if (CurrentHitPoints <= 0)
-				{
-					// 显示信息
-					RaiseMessage("The " + _currentMonster.Name + " killed you.");
-
-					// 回到出生点
-					MoveHome();
-				}
+				CurrentMonster.CurrentHitPoints -= damageToMonster;
+				RaiseMessage("You hit the " + CurrentMonster.Name + " for " + damageToMonster + " points.");
 			}
+
+
+			// 检查怪物是否死亡
+			if (CurrentMonster.IsDead)
+			{
+				LootTheCurrentMonster();
+				MoveTo(CurrentLocation); // 移动玩家到当前位置（用于刷新玩家、更新新的怪物）
+			}
+			else
+			{
+				LetTheMonsterAttack();
+			}
+		}
+
+		private void LootTheCurrentMonster()
+		{
+			RaiseMessage("");
+			RaiseMessage("You defeated the " + CurrentMonster.Name);
+			RaiseMessage("You receive " + CurrentMonster.RewardExperiencePoints.ToString() + " experience points.");
+			RaiseMessage("You receive " + CurrentMonster.RewardGold.ToString() + " gold.");
+
+			AddExperiencePoints(CurrentMonster.RewardExperiencePoints);
+			Gold += CurrentMonster.RewardGold;
+
+			// 将掉落物给予玩家
+			foreach (InventoryItem inventoryItem in CurrentMonster.LootItems)
+			{
+				AddItemToInventory(inventoryItem.Details);
+
+				RaiseMessage(string.Format("You loot {0} {1}", inventoryItem.Quantity, inventoryItem.Description));
+			}
+
+			// 在信息框中添加一行空行，美观
+			RaiseMessage("");
 		}
 
 		public void UsePotion(HealingPotion potion)
 		{
-			// 恢复玩家生命值
-			CurrentHitPoints += potion.AmountToHeal;
-
-			// 当前生命值不能超过最大生命值
-			if (CurrentHitPoints > MaximumHitPoints)
-			{
-				CurrentHitPoints = MaximumHitPoints;
-			}
-
-			// 从物品栏中删除药品
-			RemoveItemFromInventory(potion, 1);
-
 			// 显示信息
 			RaiseMessage("You drink a " + potion.Name + " and healed " + potion.AmountToHeal + " hit points.");
+			HealPlayer(potion.AmountToHeal);
+			RemoveItemFromInventory(potion);
+			// The player used their turn to drink the potion, so let the monster attack now
+			LetTheMonsterAttack();
+		}
 
-			// 轮到怪物展开攻击
-			int damageToPlayer = RandomNumberGenerator.NumberBetween(0, _currentMonster.MaximumDamage);
+		private void SetTheCurrentMonsterForTheCurrentLocation(Location location)
+		{
+			// Populate the current monster with this location's monster (or null, if there is no monster here)
+			CurrentMonster = location.NewInstanceOfMonsterLivingHere();
 
-			// 显示信息
-			RaiseMessage("The " + _currentMonster.Name + " did " + damageToPlayer + " points of damage.");
+			if (CurrentMonster != null)
+			{
+				RaiseMessage("You see a " + location.MonsterLivingHere.Name);
+			}
+		}
 
-			// 扣去玩家生命值
+		private bool PlayerDoesNotHaveTheRequiredItemToEnter(Location location)
+		{
+			return !HasRequiredItemToEnterThisLocation(location);
+		}
+
+		private bool PlayerDoesNotHaveThisQuest(Quest quest)
+		{
+			return Quests.All(pq => pq.Details.ID != quest.ID);
+		}
+
+		private bool PlayerHasNotCompleted(Quest quest)
+		{
+			return Quests.Any(pq => pq.Details.ID == quest.ID && !pq.IsCompleted);
+		}
+
+		private void GiveQuestToPlayer(Quest quest)
+		{
+			RaiseMessage("You receive the " + quest.Name + " quest.");
+			RaiseMessage(quest.Description);
+			RaiseMessage("To complete it, return with:");
+
+			foreach (QuestCompletionItem qci in quest.QuestCompletionItems)
+			{
+				RaiseMessage(string.Format("{0} {1}", qci.Quantity,
+					qci.Quantity == 1 ? qci.Details.Name : qci.Details.NamePlural));
+			}
+
+			RaiseMessage("");
+
+			Quests.Add(new PlayerQuest(quest));
+		}
+
+		private bool PlayerHasAllQuestCompletionItemsFor(Quest quest)
+		{
+			// See if the player has all the items needed to complete the quest here
+			foreach (QuestCompletionItem qci in quest.QuestCompletionItems)
+			{
+				// Check each item in the player's inventory, to see if they have it, and enough of it
+				if (!Inventory.Any(ii => ii.Details.ID == qci.Details.ID && ii.Quantity >= qci.Quantity))
+				{
+					return false;
+				}
+			}
+
+			// If we got here, then the player must have all the required items, and enough of them, to complete the quest.
+			return true;
+		}
+
+		private void GivePlayerQuestRewards(Quest quest)
+		{
+			RaiseMessage("");
+			RaiseMessage("You complete the '" + quest.Name + "' quest.");
+			RaiseMessage("You receive: ");
+			RaiseMessage(quest.RewardExperiencePoints + " experience points");
+			RaiseMessage(quest.RewardGold + " gold");
+			RaiseMessage(quest.RewardItem.Name, true);
+
+			AddExperiencePoints(quest.RewardExperiencePoints);
+			Gold += quest.RewardGold;
+
+			RemoveQuestCompletionItems(quest);
+			AddItemToInventory(quest.RewardItem);
+
+			MarkPlayerQuestCompleted(quest);
+		}
+
+		private void MarkPlayerQuestCompleted(Quest quest)
+		{
+			PlayerQuest playerQuest = Quests.SingleOrDefault(pq => pq.Details.ID == quest.ID);
+
+			if (playerQuest != null)
+			{
+				playerQuest.IsCompleted = true;
+			}
+		}
+
+		private void LetTheMonsterAttack()
+		{
+			int damageToPlayer = RandomNumberGenerator.NumberBetween(0, CurrentMonster.MaximumDamage);
+
+			RaiseMessage("The " + CurrentMonster.Name + " did " + damageToPlayer + " points of damage.");
+
 			CurrentHitPoints -= damageToPlayer;
 
-			// 检查玩家是否死亡
-			if (CurrentHitPoints <= 0)
+			if (IsDead)
 			{
-				// 显示信息
-				RaiseMessage("The " + _currentMonster.Name + " killed you.");
+				RaiseMessage("The " + CurrentMonster.Name + " killed you.");
 
-				// 回到出生点
 				MoveHome();
 			}
 		}
 
-		/// <summary>
-		/// UI事件监听handler
-		/// <para>
-		/// The EventHandler<MessageEventArgs> signifies that the Player class will send an event
-		/// notification with a MessageEventArgs object – the object with the message text we want to
-		/// display.
-		/// </para>
-		/// </summary>
-		public event EventHandler<MessageEventArgs> OnMessage;
+		private void HealPlayer(int hitPointsToHeal)
+		{
+			CurrentHitPoints = Math.Min(CurrentHitPoints + hitPointsToHeal, MaximumHitPoints);
+		}
+
+		private void CompletelyHeal()
+		{
+			CurrentHitPoints = MaximumHitPoints;
+		}
 
 		// 提升事件
 		private void RaiseMessage(string message, bool addExtraNewLine = false)

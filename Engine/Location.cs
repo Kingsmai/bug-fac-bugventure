@@ -2,30 +2,20 @@
 {
 	public class Location
 	{
-		// ID
 		public int ID { get; set; }
-		// 地点名
 		public string Name { get; set; }
-		// 详情
 		public string Description { get; set; }
-		// 进入场景需要的物品（比如钥匙）
 		public Item ItemRequiredToEnter { get; set; }
-		// 这个场景的任务
 		public Quest QuestAvailableHere { get; set; }
-		// 这个场景有没有任务
-		public bool HasAQuest { get { return QuestAvailableHere != null; } }
-		// 在这个场景的生物
 		public Monster MonsterLivingHere { get; set; }
-		// 在这个场景的商贩
 		public Vendor VendorWorkingHere { get; set; }
-		// 北方
 		public Location LocationToNorth { get; set; }
-		// 东方
 		public Location LocationToEast { get; set; }
-		// 南方
 		public Location LocationToSouth { get; set; }
-		// 西方
 		public Location LocationToWest { get; set; }
+
+		public bool HasAQuest { get { return QuestAvailableHere != null; } }
+		public bool DoesNotHaveAnItemRequiredToEnter { get { return ItemRequiredToEnter == null; } }
 
 		// 构造方法
 		/// <summary>
@@ -48,6 +38,11 @@
 			ItemRequiredToEnter = itemRequiredToEnter;
 			QuestAvailableHere = questAvailableHere;
 			MonsterLivingHere = monsterLivingHere;
+		}
+
+		public Monster NewInstanceOfMonsterLivingHere()
+		{
+			return MonsterLivingHere == null ? null : MonsterLivingHere.NewInstanceOfMonster();
 		}
 	}
 }

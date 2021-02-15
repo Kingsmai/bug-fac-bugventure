@@ -7,8 +7,9 @@ namespace Engine
 	/// </summary>
 	public class PlayerQuest : INotifyPropertyChanged
 	{
-		// 任务详情
 		private Quest _details;
+		private bool _isCompleted;
+
 		public Quest Details
 		{
 			get { return _details; }
@@ -18,8 +19,6 @@ namespace Engine
 				OnPropertyChanged("Details");
 			}
 		}
-		// 是否完成
-		private bool _isCompleted;
 		public bool IsCompleted
 		{
 			get { return _isCompleted; }
