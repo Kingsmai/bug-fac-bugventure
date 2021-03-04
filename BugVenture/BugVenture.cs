@@ -190,6 +190,8 @@ namespace BugVenture
 				}
 				else
 				{
+					cboPotions.DataSource = _player.Potions;
+					cboWeapons.DataSource = _player.Weapons;
 					cboWeapons.Visible = _player.Weapons.Any();
 					cboPotions.Visible = _player.Potions.Any();
 					btnUseWeapon.Visible = _player.Weapons.Any();

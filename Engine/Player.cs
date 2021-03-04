@@ -116,7 +116,7 @@ namespace Engine
 		/// <param name="quantity">需要移除的数量</param>
 		public void RemoveItemFromInventory(Item itemToRemove, int quantity = 1)
 		{
-			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToRemove.ID && ii.Quantity > quantity);
+			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToRemove.ID && ii.Quantity >= quantity);
 
 			if (item != null)
 			{
